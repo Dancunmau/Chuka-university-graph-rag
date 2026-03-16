@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Documents
+"CHUKA                                                   UNIVERSITY (1).docx"
+
 # Python
 __pycache__/
 *.py[cod]
