@@ -7,7 +7,7 @@ from src.database import get_or_create_user, save_user_profile, log_chat_history
 
 st.set_page_config(
     page_title="Chuka University GraphRAG",
-    page_icon="🎓",
+    page_icon="B",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -156,9 +156,8 @@ def onboarding_screen():
         st.markdown("""
         <div style="text-align:center;margin-bottom:20px;margin-top:40px;">
             <div style="display:inline-flex;align-items:center;justify-content:center;
-                        width:72px;height:72px;border-radius:50%;
                         background:linear-gradient(135deg,#0b2d71,#176BFF);
-                        color:white;font-size:2em;margin-bottom:14px;">🎓</div>
+                        color:white;font-size:2em;margin-bottom:14px;"></div>
             <h2 style="color:#0b2d71;font-weight:700;margin:0 0 4px;">Chuka University</h2>
             <p style="color:#64748b;font-size:0.9em;margin:0 0 28px;">Academic Assistant</p>
         </div>
@@ -227,7 +226,7 @@ def course_explorer_view():
             <div style="width:42px;height:42px;border-radius:50%;
                         background:linear-gradient(135deg,#10b981,#059669);
                         display:flex;align-items:center;justify-content:center;
-                        color:white;font-size:1.1em;flex-shrink:0;">📚</div>
+                        color:white;font-size:1.1em;flex-shrink:0;"></div>
             <span style="font-size:1.5em;font-weight:700;color:#0f172a;">Course Explorer</span>
         </div>
     """, unsafe_allow_html=True)
@@ -347,7 +346,7 @@ def main_chat():
                 title_style = ParagraphStyle(
                     'TitleStyle', parent=styles['Heading1'], alignment=1, spaceAfter=10
                 )
-                elements.append(Paragraph("Chuka University 🎓", title_style))
+                elements.append(Paragraph("Chuka University", title_style))
                 elements.append(Paragraph(f"Academic Timetable Matrix", styles['Heading2']))
                 
                 profile = st.session_state.user_profile
@@ -451,10 +450,10 @@ def main_chat():
         <div style="margin-top:auto;padding:20px 0 0 0;">
             <hr style="border-color:#2e3650;margin-bottom:12px;">
             <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                <span>📚</span> Library
+                Library
             </div>
             <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                <span>⚙️</span> Settings
+                Settings
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -475,7 +474,7 @@ def main_chat():
                 <div style="width:42px;height:42px;border-radius:50%;
                             background:linear-gradient(135deg,#7b61ff,#2563eb);
                             display:flex;align-items:center;justify-content:center;
-                            color:white;font-size:1.1em;flex-shrink:0;">🎓</div>
+                            color:white;font-size:1.1em;flex-shrink:0;"></div>
                 <span style="font-size:1.5em;font-weight:700;color:#0f172a;">AI Assistant</span>
             </div>
         """, unsafe_allow_html=True)

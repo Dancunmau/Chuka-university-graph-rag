@@ -1,10 +1,10 @@
-# Chuka University GraphRAG Assistant 🎓
+# Chuka University GraphRAG Assistant
 
 An intelligent, context-aware academic ecosystem designed to transform how 15,000+ Chuka University students interact with institutional data.
 
 ---
 
-## 🌟 The Mission
+## Mission
 In the current higher education landscape, students often face **Information Fragmentation**. Critical data—timetables, fee structures, past papers, and university policies—is scattered across disconnected PDF files, Word documents, and web repositories.
 
 This project implements a **GraphRAG (Graph Retrieval-Augmented Generation)** assistant that unifies these sources into a single, conversational interface. It solves:
@@ -12,7 +12,7 @@ This project implements a **GraphRAG (Graph Retrieval-Augmented Generation)** as
 - **Lack of Personalization**: Responses are tailored to your Program, Year, and Semester.
 - **Manual Search**: Replaces 20-minute manual PDF searches with 2-second AI responses.
 
-## 🧠 How It Works: The Hybrid Brain
+## How It Works: The Hybrid Brain
 The assistant uses a "Dual-Layer" retrieval strategy to ensure maximum accuracy:
 
 ### 1. The Knowledge Graph (Structured) -> **Neo4j**
@@ -33,15 +33,15 @@ The "Director" that coordinates the two layers.
 
 ---
 
-## 🛠️ Key Functionalities
-- **📅 Smart Timetable**: Generates personalized schedules filtered by the current day or week.
-- **💰 Fee Calculator**: Automatically calculates total program costs based on real-time tuition data.
-- **📄 Exam Repository**: Direct links to past papers on `repository.chuka.ac.ke` with sorted metadata.
-- **🛡️ Privacy-First**: Identity is managed locally via anonymous device tokens—no passwords required.
+## Key Functionalities
+- **Smart Timetable**: Generates personalized schedules filtered by the current day or week.
+- **Fee Calculator**: Automatically calculates total program costs based on real-time tuition data.
+- **Exam Repository**: Direct links to past papers on `repository.chuka.ac.ke` with sorted metadata.
+- **Privacy-First**: Identity is managed locally via anonymous device tokens—no passwords required.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 ```bash
@@ -58,7 +58,7 @@ streamlit run app.py
 
 ---
 
-## 📊 Technical Stack
+##  Technical Stack
 - **Core Engine**: Python 3.10
 - **Knowledge Graph**: Neo4j (Cypher)
 - **Vector Database**: FAISS (all-mpnet-base-v2)
@@ -68,6 +68,6 @@ streamlit run app.py
 
 ---
 
-## 📝 Authors
-**Chuka University Assistant Project Team**
-*Empowering academic journeys through intelligent data structures.*
+## Authors
+**Dancun Mau Wainaina**
+
