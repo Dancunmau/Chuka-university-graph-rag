@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8501:8501"
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/app/data
+      - ../src:/app/src
+      - ../notebooks:/app/notebooks
+    restart: always
+
+# Note: Neo4j is assumed to be running on AuraDB (cloud) per .env
+# If you want to run Neo4j locally, add a neo4j service here.

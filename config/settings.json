@@ -1,0 +1,20 @@
+{
+    "project_name": "Chuka University GraphRAG Assistant",
+    "version": "1.0.0",
+    "llm": {
+        "primary_model": "gemini-2.0-flash",
+        "embedding_model": "all-mpnet-base-v2",
+        "temperature": 0.1
+    },
+    "paths": {
+        "faiss_index": "data/faiss_index.bin",
+        "faiss_metadata": "data/faiss_metadata.pkl",
+        "curricular_data": "data/curricular_mapping.csv",
+        "programs_data": "data/programs.csv"
+    },
+    "features": {
+        "enable_semantic_search": true,
+        "enable_graph_traversal": true,
+        "enable_history_persistence": true
+    }
+}

@@ -1,0 +1,43 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# Data and Indices (excluding small CSVs if needed, or including all large generated files)
+data/*.bin
+data/*.pkl
+data/*.csv
+!data/course_catalogue.csv
+!data/curricular_mapping.csv
+
+# IDEs
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/
