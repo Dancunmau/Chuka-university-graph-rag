@@ -2,7 +2,7 @@
 
 An intelligent, context-aware academic ecosystem designed to transform how 15,000+ Chuka University students interact with institutional data.
 
----
+
 
 ## Mission
 In the current higher education landscape, students often face **Information Fragmentation**. Critical data—timetables, fee structures, past papers, and university policies—is scattered across disconnected PDF files, Word documents, and web repositories.
@@ -31,7 +31,7 @@ The "Director" that coordinates the two layers.
 - It **extracts** entities (unit codes, dates).
 - It **generates** a human-like response grounded in real data (no hallucinations).
 
----
+
 
 ## Key Functionalities
 - **Smart Timetable**: Generates personalized schedules filtered by the current day or week.
@@ -39,7 +39,7 @@ The "Director" that coordinates the two layers.
 - **Exam Repository**: Direct links to past papers on `repository.chuka.ac.ke` with sorted metadata.
 - **Privacy-First**: Identity is managed locally via anonymous device tokens—no passwords required.
 
----
+
 
 ## Getting Started
 
@@ -56,7 +56,7 @@ Configure your credentials in a `.env` file (Neo4j AuraDB + Gemini API Keys).
 streamlit run app.py
 ```
 
----
+
 
 ##  Technical Stack
 - **Core Engine**: Python 3.10
