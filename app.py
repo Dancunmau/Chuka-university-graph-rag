@@ -4,6 +4,7 @@ import io
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
 from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, SessionLocal, UserProfile
+from src.pdf_handler import parse_chuka_document
 
 st.set_page_config(
     page_title="Chuka University GraphRAG",
@@ -67,11 +68,6 @@ html, body,
     box-shadow: none !important;
     padding: 12px 0 !important;
 }
-/* thin separator between messages */
-[data-testid="stChatMessage"] + [data-testid="stChatMessage"] {
-    border-top: 1px solid #f1f3f9 !important;
-}
-
 /* ── 5. Chat input bar ─────────────────────────────────────── */
 [data-testid="stChatInput"] > div {
     background: #f4f6fb !important;
@@ -98,10 +94,62 @@ input[type="text"] {
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
 }
+
+/* Hide Streamlit default header (Deploy button etc) to reclaim top space */
+header[data-testid="stHeader"] {
+    display: none !important;
+    height: 0px !important;
+}
+
+/* Force zero top padding on the main block to push header flush to the top */
+[data-testid="stMainBlockContainer"], .main .block-container {
+    padding-top: 15px !important;
+    padding-bottom: 120px !important;
+}
+
+/* Header refinement */
+.custom-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 40px 20px 40px;
+    border-bottom: 1px solid #e2e8f0;
+    margin: 0 -40px 30px -40px; /* Stretch to edges of container */
+}
+.header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #7b61ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* ── 5. Chat Input Styling ───────────────────────────────── */
+/* Native Streamlit positioning works best; just style it */
+[data-testid="stChatInput"] {
+    border-radius: 28px !important;
+    background: white !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Ensure padding-bottom so messages aren't hidden under bar */
+.main .block-container {
+    padding-bottom: 120px !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# ── 1. Device Token Identity (Se─
+#  1. Device Token Identity 
 if "device_token" not in st.session_state:
     query_params = st.query_params
     if "token" in query_params:
@@ -148,6 +196,12 @@ if "chat_history" not in st.session_state:
             {"role": "user", "content": r.query_text},
             {"role": "assistant", "content": r.response_text},
         ]
+
+if "extra_context" not in st.session_state:
+    st.session_state.extra_context = ""
+
+if "uploaded_file_name" not in st.session_state:
+    st.session_state.uploaded_file_name = None
 
 #  ONBOARDING SCREEN
 def onboarding_screen():
@@ -414,8 +468,6 @@ def main_chat():
             except Exception as e:
                 st.error(f"PDF Export error: {e}")
 
-        st.markdown("<br>", unsafe_allow_html=True)
-
         # History list
         past_queries = [m["content"] for m in st.session_state.chat_history if m["role"] == "user"]
         if past_queries:
@@ -467,42 +519,82 @@ def main_chat():
     if st.session_state.current_view == "explorer":
         course_explorer_view()
     else:
-        # Header
+        # Header matching screenshot
         st.markdown("""
-            <div style="display:flex;align-items:center;gap:14px;
-                        padding-bottom:16px;border-bottom:1px solid #e8ecf4;margin-bottom:10px;">
-                <div style="width:42px;height:42px;border-radius:50%;
-                            background:linear-gradient(135deg,#7b61ff,#2563eb);
-                            display:flex;align-items:center;justify-content:center;
-                            color:white;font-size:1.1em;flex-shrink:0;"></div>
-                <span style="font-size:1.5em;font-weight:700;color:#0f172a;">AI Assistant</span>
+            <div class="custom-header">
+                <div class="header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                </div>
+                <div class="header-title">AI Assistant</div>
             </div>
         """, unsafe_allow_html=True)
 
+        # Output existing chat history
         for msg in st.session_state.chat_history:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
+                
+        # FORCE RE-INITIALIZATION IF CODE UPDATED
+        if "code_ver" not in st.session_state:
+            from src.chuka_graphrag_pipeline import GraphRAGAssistant
+            st.session_state.assistant = GraphRAGAssistant()
+            st.session_state.code_ver = 1.0
 
-        if prompt := st.chat_input("Ask the University Assistant..."):
-            st.session_state.chat_history.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+        # ── NATIVE CHAT INPUT WITH FILE/AUDIO (Streamlit 1.38+) ─────────
+        # This matches the user's screenshot exactly!
+        prompt = st.chat_input(
+            "Ask the University Assistant...", 
+            accept_file=True, 
+            accept_audio=True
+        )
+
+        if prompt:
+            final_prompt = ""
+            
+            # Handle text input
+            if getattr(prompt, "text", None):
+                final_prompt = prompt.text
+            
+            # Handle audio upload
+            if getattr(prompt, "audio", None):
+                with st.spinner("Transcribing audio..."):
+                    audio_transcription = st.session_state.assistant.transcribe_audio(prompt.audio.read())
+                    if audio_transcription:
+                        if final_prompt: 
+                            final_prompt += f"\n[Voice Transcription]: {audio_transcription}"
+                        else:
+                            final_prompt = audio_transcription
+            
+            # Handle file upload
+            if getattr(prompt, "files", None) and len(prompt.files) > 0:
+                with st.spinner(f"Processing document {prompt.files[0].name}..."):
+                    context = parse_chuka_document(prompt.files[0].name, prompt.files[0].read())
+                    st.session_state.extra_context = context
+                    st.session_state.uploaded_file_name = prompt.files[0].name
+                    st.success(f"Loaded: {prompt.files[0].name}")
+                    
+            if final_prompt:
+                st.session_state.chat_history.append({"role": "user", "content": final_prompt})
+                with st.chat_message("user"):
+                    st.markdown(final_prompt)
 
             with st.chat_message("assistant"):
                 with st.spinner(""):
                     try:
                         response = st.session_state.assistant.generate_response(
-                            prompt, st.session_state.user_profile
+                            final_prompt,
+                            st.session_state.user_profile,
+                            extra_context=st.session_state.get("extra_context", "")
                         )
                     except Exception as e:
-                        response = f"Error: {e}"
+                        response = f"Sorry, I ran into an error: {e}"
                     st.markdown(response)
 
             st.session_state.chat_history.append({"role": "assistant", "content": response})
-            log_chat_history(st.session_state.user_id, prompt, response)
+            log_chat_history(st.session_state.user_id, final_prompt, response)
             st.rerun()
 
-#  Router
+# ── Router ────────────────────────────────────────────────────────────
 if not st.session_state.user_profile:
     onboarding_screen()
 else:

@@ -55,8 +55,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("ChukaPipeline")
 
 
-# Helper: safely call Gemini with a fallback
-def _gemini_call(prompt: str, model_name="gemini-2.5-flash", retries=3) -> str:
+def _gemini_call(prompt: str, model_name="gemini-1.5-flash", retries=3) -> str:
     """Call Gemini with exponential back-off for free-tier rate limits."""
     global current_key_idx
     import time
@@ -64,30 +63,22 @@ def _gemini_call(prompt: str, model_name="gemini-2.5-flash", retries=3) -> str:
 
     for attempt in range(retries):
         try:
-            # Configure with the current key before trying
             genai.configure(api_key=GEMINI_KEYS[current_key_idx])
             model = genai.GenerativeModel(model_name)
-            return model.generate_content(prompt).text.strip()
+            response = model.generate_content(prompt)
+            return response.text.strip()
         except Exception as e:
             err = str(e)
             if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
-                # If we have backup keys, rotate immediately
                 if len(GEMINI_KEYS) > 1:
                     current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
-                    log.warning(f"Gemini quota hit. Rotating to API Key #{current_key_idx + 1}")
-                    # Don't sleep if we just rotated, try immediately
+                    log.warning(f"Rotating to API Key #{current_key_idx + 1}")
                     continue
-
                 if attempt < retries - 1:
-                    log.warning(f"Gemini rate limit — retrying in {delay}s (attempt {attempt+1}/{retries})")
                     time.sleep(delay)
-                    delay *= 2   # exponential back-off
-                else:
-                    log.error(f"Gemini rate limit after {retries} retries.")
-                    return ""
-            else:
-                log.error(f"Gemini error: {e}")
-                return ""
+                    delay *= 2
+                else: return ""
+            else: return ""
     return ""
 
 
@@ -435,13 +426,17 @@ def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str
 
 
 # 5. Final Answer Synthesis 
-def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict) -> str:
+def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "") -> str:
+    """Synthesise a grounded response using retrieved data."""
     profile_str = json.dumps(profile or {})
     context = ""
+    if extra_ctx:
+        context += f"=== Information from Your Uploaded Document ===\n{extra_ctx}\n\n"
     if graph_ctx:
-        context += f"=== Knowledge Graph Data ===\n{graph_ctx}\n\n"
+        context += f"=== Academic Database Records (Neo4j) ===\n{graph_ctx}\n\n"
     if faiss_ctx:
         context += f"=== Handbook / Policy Context ===\n{faiss_ctx}\n\n"
+        
     if not context:
         context = "No specific data was found in the database for this query."
 
@@ -456,7 +451,8 @@ Context:
 
 Instructions:
 1. Use ONLY the provided context to answer. If the answer is not in the context, say you don't know but suggest who to contact (e.g., Registrar or specify the department).
-2. When using information from the 'Handbook / Policy Context', ALWAYS cite the document name and page number (e.g., "According to the Student Handbook (Page 67)...").
+2. PRIORITIZE information from the 'Uploaded Document' if it answers the student's specific question (e.g., personal timetable/fees).
+3. When using information from the 'Handbook / Policy Context', ALWAYS cite the document name and page number.
 3. If multiple versions of information exist, prioritize the most recent (e.g., 2026 Timetable over 2024 Advert).
 4. Format your response using markdown. Use bullet points for lists.
 5. Be professional yet friendly.
@@ -559,36 +555,54 @@ class GraphRAGAssistant:
             pickle.dump(self.faiss_meta, f)
         log.info(f"FAISS updated: {len(docs)} new chunks added.")
 
-    def generate_response(self, query: str, profile: dict) -> str:
-        """
-        Master entry point.
-        1. Classify intent
-        2. Extract entities
-        3. Route to graph / FAISS / both
-        4. Synthesise with Gemini
-        """
-        log.info(f"Query: {query}")
+    def generate_response(self, query: str, user_profile: dict, extra_context: str = "") -> str:
+        """The main pipeline entry point."""
+        student_name = user_profile.get("full_name", "Student")
+        
+        # 1. Intent Classification
+        intent = classify_intent(query)
+        log.info(f"Query Intent: {intent}")
+        
+        # 2. Entity Extraction
+        # Pass both query and profile (dict) to match definition
+        entities = extract_entities(query, user_profile) 
+        log.info(f"Extracted Entities: {entities}")
+        
+        # 3. Graph Retrieval
+        # retrieve_from_graph expects (query, entities, profile, driver)
+        graph_nodes = retrieve_from_graph(query, entities, user_profile, self.driver)
+        
+        # 4. FAISS Retrieval (if needed)
+        faiss_results = ""
+        if FAISS_AVAILABLE:
+            faiss_results = retrieve_from_faiss(query, self.faiss_index, self.faiss_meta, self.embedder)
+            
+        # 5. Synthesis
+        response = synthesise_response(
+            query, 
+            graph_nodes, 
+            faiss_results,
+            user_profile,
+            extra_context
+        )
+        
+        return response
 
-        intent   = classify_intent(query)
-        entities = extract_entities(query, profile)
-
-        log.info(f"Intent: {intent} | Entities: {entities}")
-
-        graph_ctx = ""
-        faiss_ctx = ""
-
-        if intent in ("graph_query", "hybrid"):
-            graph_ctx = retrieve_from_graph(query, entities, profile, self.driver)
-
-        if intent in ("semantic_search", "hybrid"):
-            faiss_ctx = retrieve_from_faiss(
-                query,
-                self.faiss_index,
-                self.faiss_meta,
-                self.embedder
-            )
-
-        return synthesise_response(query, graph_ctx, faiss_ctx, profile)
+    def transcribe_audio(self, audio_bytes: bytes) -> str:
+        """Transcribe audio bytes using Gemini 1.5 Flash."""
+        try:
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            # Create a Part from audio bytes
+            audio_part = {
+                "mime_type": "audio/wav", # Streamlit audio_input records as wav usually
+                "data": audio_bytes
+            }
+            prompt = "Transcribe this audio clip of a student query. Return only the transcription text."
+            response = model.generate_content([prompt, audio_part])
+            return response.text.strip()
+        except Exception as e:
+            log.error(f"Transcription error: {e}")
+            return ""
 
     def get_mapped_programmes(self) -> list:
         """Fetch programmes that have at least one course unit mapped to them, with counts."""
