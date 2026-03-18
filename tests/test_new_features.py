@@ -27,9 +27,9 @@ def verify_new_features():
     response = assistant.generate_response("Show my timetable for Monday", profile)
     # Success if it doesn't crash and returns something better than an empty fallback
     if len(response) > 50 and "Monday" in response:
-        print("✅ PASS: Day context processed in response.")
+        print(" PASS: Day context processed in response.")
     else:
-        print(f"⚠️ NOTE: Response generated but 'Monday' keyword check failed. Content: {response[:100]}...")
+        print(f" NOTE: Response generated but 'Monday' keyword check failed. Content: {response[:100]}...")
 
     # 2. Test Fee Calculation
     print(f"\n[2/4] Testing Total Cost Calculation...")
@@ -37,9 +37,9 @@ def verify_new_features():
     query = "What is the total cost for Bachelor of Science in Computer Science?"
     cost_response = assistant.generate_response(query, profile)
     if "Total Program Cost" in cost_response or "KES" in cost_response or "cost" in cost_response.lower():
-        print("✅ PASS: Total cost calculation detected.")
+        print(" PASS: Total cost calculation detected.")
     else:
-        print(f"❌ FAIL: No cost calculation found. Response: {cost_response[:100]}...")
+        print(f" FAIL: No cost calculation found. Response: {cost_response[:100]}...")
 
     # 3. Test Database History & Clear History
     print(f"\n[3/4] Testing Chat History Clear...")
@@ -56,17 +56,17 @@ def verify_new_features():
     print(f"History count after: {len(history_after)}")
     
     if len(history_before) > 0 and len(history_after) == 0:
-        print("✅ PASS: Database history cleared successfully.")
+        print(" PASS: Database history cleared successfully.")
     else:
-        print("❌ FAIL: History clear failed.")
+        print(" FAIL: History clear failed.")
 
     # 4. Test Timetable Data Retrieval (Export Support)
     print(f"\n[4/4] Testing Timetable Export Retrieval...")
     tt_data = assistant.get_personalized_timetable(profile)
     if isinstance(tt_data, list):
-        print(f"✅ PASS: Method returned list with {len(tt_data)} rows.")
+        print(f" PASS: Method returned list with {len(tt_data)} rows.")
     else:
-        print("❌ FAIL: Could not retrieve timetable list.")
+        print(" FAIL: Could not retrieve timetable list.")
 
     assistant.close()
     print("\n" + "="*60)
