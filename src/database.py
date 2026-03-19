@@ -62,7 +62,7 @@ class History(Base):
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-# Safely add session_id column to existing table to prevent crashing
+# add session_id column to existing table to prevent crashing
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE history ADD COLUMN session_id VARCHAR(100)"))
@@ -90,7 +90,7 @@ def get_or_create_user(device_token=None):
             db.commit()
             db.refresh(user)
 
-        # Return a plain dict — avoids DetachedInstanceError entirely
+        # Return a plain dict — avoids DetachedInstanceError
         return {"user_id": user.user_id, "device_token": user.device_token}
     finally:
         db.close()

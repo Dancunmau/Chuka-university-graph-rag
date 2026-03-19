@@ -630,17 +630,18 @@ class GraphRAGAssistant:
             raise e
 
     def get_mapped_programmes(self) -> list:
-        """Fetch programmes that have at least one course unit mapped to them, with counts."""
+        """Fetch programmes that have at least one course unit mapped to them, along with their associated faculty."""
         try:
             with self.driver.session() as session:
                 r = session.run("""
-                MATCH (p:Programme)-[:HAS_UNIT]->(u)
-                RETURN p.name as name, count(u) as unit_count
-                ORDER BY p.name
+                MATCH (f)-[:HAS_DEPARTMENT|HAS_PROGRAMME|BELONGS_TO|IN_FACULTY*1..3]->(p:Programme)-[:HAS_UNIT]->(u)
+                WHERE any(label IN labels(f) WHERE label CONTAINS 'Faculty' OR label CONTAINS 'School')
+                RETURN DISTINCT p.name as name, f.name as faculty, count(DISTINCT u) as unit_count
+                ORDER BY f.name, p.name
                 """)
-                return [{"name": row["name"], "count": row["unit_count"]} for row in r]
+                return [{"name": row["name"], "faculty": row["faculty"], "count": row["unit_count"]} for row in r]
         except Exception as e:
-            log.error(f"Error fetching mapped programmes with counts: {e}")
+            log.error(f"Error fetching mapped programmes with faculties: {e}")
             return []
 
     def get_personalized_timetable(self, profile):

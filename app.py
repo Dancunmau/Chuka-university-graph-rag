@@ -228,23 +228,28 @@ def onboarding_screen():
         </div>
         """, unsafe_allow_html=True)
 
-        faculty = st.selectbox("Faculty", [
-            "Select Faculty",
-            "Faculty of Science",
-            "Faculty of Education",
-            "Faculty of Business",
-            "Faculty of Environment",
-            "Faculty of Agriculture",
-            "Faculty of Engineering",
-            "Faculty of Nursing",
-            "Faculty of Arts",
-            "Faculty of Law",
-        ])
         mapped_progs = st.session_state.get('mapped_programmes', [])
+        
+        # 1. Dynamic Faculty Selection
         if not mapped_progs:
-            display_options = ["Select Program", "BSc Computer Science", "BCom", "BEd Science"]
+            faculties = ["Select Faculty", "Faculty of Science & Technology", "Faculty of Business Studies"]
         else:
-            display_options = ["Select Program"] + mapped_progs
+            # Extract unique faculties from the database results
+            db_faculties = sorted(list(set([p['faculty'] for p in mapped_progs if p.get('faculty')])))
+            faculties = ["Select Faculty"] + db_faculties
+
+        faculty = st.selectbox("Faculty", faculties)
+        
+        # 2. Filtered Program Selection
+        if faculty == "Select Faculty":
+            display_options = ["Select Program"]
+        else:
+            # Filter programs that belong to the selected faculty
+            filtered = [p for p in mapped_progs if p.get('faculty') == faculty]
+            if not filtered:
+                display_options = ["Select Program"]
+            else:
+                display_options = ["Select Program"] + filtered
 
         program_select = st.selectbox(
             "Program", 

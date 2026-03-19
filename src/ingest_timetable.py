@@ -173,7 +173,7 @@ def incremental_ingest(driver, rows):
     print(f"  Timeslot records created: {created}")
     print(f"  Units still without timeslot: {still}")
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# Main
 def main():
     parser = argparse.ArgumentParser(description="Timetable CSV → Neo4j Ingestion")
     parser.add_argument('--mode', choices=['full', 'incremental'], default='full',
