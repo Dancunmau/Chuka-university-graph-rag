@@ -58,7 +58,7 @@ log = logging.getLogger("ChukaPipeline")
 
 
 @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(4))
-def _gemini_call(prompt: str, model_name="gemini-2.5-flash") -> str:
+def _gemini_call(prompt: str, model_name="gemini-2.0-flash") -> str:
     """Call Gemini with exponential back-off via tenacity and robust key rotation."""
     global current_key_idx
     try:

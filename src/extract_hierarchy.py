@@ -12,7 +12,7 @@ if not API_KEY:
 
 genai.configure(api_key=API_KEY)
 # Use a JSON-structured prompt to ensure stable output
-model = genai.GenerativeModel('gemini-2.5-flash', generation_config={"response_mime_type": "application/json"})
+model = genai.GenerativeModel('gemini-2.0-flash', generation_config={"response_mime_type": "application/json"})
 
 def extract_hierarchy():
     with open('extracted_pdf_text.json', 'r', encoding='utf-8') as f:

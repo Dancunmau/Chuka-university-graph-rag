@@ -71,8 +71,8 @@ def main():
             dept = lookup_dept[prog_name.lower()]
         if not dept:
             dept = fac # fallback
-        fee = str(row.get('fee_string', '')).strip()
-        duration = str(row.get('duration_string', '')).strip()
+        fee = str(row.get('fee', '')).strip()
+        duration = str(row.get('duration', '')).strip()
         level = str(row.get('level', '')).strip()
             
         csv_lookup.append((prog_name, fac, dept, fee, duration, level))
@@ -94,7 +94,7 @@ def main():
     print("MATCHING Programme nodes to programs.csv...")
     print(DIVIDER)
 
-    THRESHOLD = 0.45
+    THRESHOLD = 0.7
     matched = []
     unmatched = []
 
@@ -175,15 +175,20 @@ def main():
         // 1. Maintain dual-schema strictly: Programme (timetables) gets HAS_PROGRAMME
         MERGE (d)-[:HAS_PROGRAMME]->(prog)
         
-        // 2. Program (full catalog) gets DEPARTMENT_OFFERS_PROGRAM
-        WITH prog, f, d, row
-        MATCH (cat:Program {name: row.csv_name})
-        MERGE (d)-[:DEPARTMENT_OFFERS_PROGRAM]->(cat)
-        
         // 3. Cross-pollinate fee strings and metadata from the catalog to the active Programme nodes
         SET prog.fee_string = row.fee,
             prog.duration_string = row.duration,
             prog.level = row.level
+
+        // 2. Program (full catalog) gets DEPARTMENT_OFFERS_PROGRAM
+        WITH prog, f, d, row
+        OPTIONAL MATCH (cat:Program {name: row.csv_name})
+        FOREACH (ignoreMe IN CASE WHEN cat IS NOT NULL THEN [1] ELSE [] END |
+            MERGE (d)-[:DEPARTMENT_OFFERS_PROGRAM]->(cat)
+            SET cat.fee_string = row.fee,
+                cat.duration_string = row.duration,
+                cat.level = row.level
+        )
         
         RETURN count(DISTINCT prog) AS created
         """, data=data)
