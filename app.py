@@ -239,23 +239,11 @@ def onboarding_screen():
 
         faculty = st.selectbox("Faculty", faculties)
         
-        # 2. Filtered Department Selection
+        # 2. Filtered Program Selection
         if faculty == "Select Faculty":
-            departments_options = ["Select Department"]
-        else:
-            filtered_departments = sorted(list(set([p['department'] for p in mapped_progs if p.get('faculty') == faculty and p.get('department')])))
-            if not filtered_departments:
-                departments_options = ["Select Department"]
-            else:
-                departments_options = ["Select Department"] + filtered_departments
-
-        department = st.selectbox("Department", departments_options)
-        
-        # 3. Filtered Program Selection
-        if department == "Select Department":
             display_options = ["Select Program"]
         else:
-            filtered = [p for p in mapped_progs if p.get('department') == department]
+            filtered = [p for p in mapped_progs if p.get('faculty') == faculty]
             if not filtered:
                 display_options = ["Select Program"]
             else:
