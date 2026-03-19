@@ -16,6 +16,7 @@ def extract_text_from_pdf(file_bytes):
                     text += page_text + "\n"
     except Exception as e:
         log.error(f"pdfplumber failed: {e}. Falling back to PyPDF2.")
+        text = ""  # Reset text to prevent duplication of partially decoded pages
         try:
             reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
             for page in reader.pages:

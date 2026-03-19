@@ -3,15 +3,21 @@ import uuid
 import io
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
-from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, SessionLocal, UserProfile
+from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, get_user_sessions, SessionLocal, UserProfile
 from src.pdf_handler import parse_chuka_document
 
 st.set_page_config(
     page_title="Chuka University GraphRAG",
-    page_icon="B",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+@st.cache_resource(show_spinner=False)
+def get_assistant():
+    """Global caching for the heavy GraphRAG pipelines to prevent FAISS RAM exhaustion."""
+    from src.chuka_graphrag_pipeline import GraphRAGAssistant
+    return GraphRAGAssistant()
 
 #  CSS 
 st.markdown("""
@@ -95,10 +101,12 @@ input[type="text"] {
     border-radius: 8px !important;
 }
 
-/* Hide Streamlit default header (Deploy button etc) to reclaim top space */
-header[data-testid="stHeader"] {
+/* Hide Streamlit default header right-side elements (Deploy button etc) but keep sidebar toggle */
+[data-testid="stHeaderActionElements"] {
     display: none !important;
-    height: 0px !important;
+}
+header[data-testid="stHeader"] {
+    background: transparent !important;
 }
 
 /* Force zero top padding on the main block to push header flush to the top */
@@ -132,7 +140,7 @@ header[data-testid="stHeader"] {
     color: #1e293b;
 }
 
-/* ── 5. Chat Input Styling ───────────────────────────────── */
+/* 5. Chat Input Styling */
 /* Native Streamlit positioning works best; just style it */
 [data-testid="stChatInput"] {
     border-radius: 28px !important;
@@ -188,8 +196,11 @@ if "user_profile" not in st.session_state:
     finally:
         db.close()
 
+if "current_session_id" not in st.session_state:
+    st.session_state.current_session_id = str(uuid.uuid4())
+
 if "chat_history" not in st.session_state:
-    rows = get_chat_history(user["user_id"])
+    rows = get_chat_history(user["user_id"], session_id=st.session_state.current_session_id)
     st.session_state.chat_history = []
     for r in rows:
         st.session_state.chat_history += [
@@ -238,11 +249,11 @@ def onboarding_screen():
         program_select = st.selectbox(
             "Program", 
             display_options,
-            format_func=lambda x: f"{x['name']} ({x['count']} units)" if isinstance(x, dict) else x
+            format_func=lambda x: x['name'] if isinstance(x, dict) else x
         )
         
         program = program_select['name'] if isinstance(program_select, dict) else program_select
-        year = st.selectbox("Year of Study", ["Select Year", "1", "2", "3", "4", "5", "6"])
+        year = st.selectbox("Year of Study", ["Select Year", "1", "2", "3", "4", "5"])
         semester = st.selectbox("Semester", ["Select Semester", "1", "2", "3"])
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -366,6 +377,7 @@ def main_chat():
     with st.sidebar:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("＋  New Chat", use_container_width=True, key="new_chat"):
+            st.session_state.current_session_id = str(uuid.uuid4())
             st.session_state.chat_history = []
             st.session_state.current_view = "chat"
             st.rerun()
@@ -376,6 +388,7 @@ def main_chat():
 
         if st.button("Clear History", use_container_width=True, key="clear_hist"):
             clear_chat_history(st.session_state.user_id)
+            st.session_state.current_session_id = str(uuid.uuid4())
             st.session_state.chat_history = []
             st.rerun()
 
@@ -384,7 +397,7 @@ def main_chat():
         
         # Export logic
         if tt_data:
-            # Grid-Based professional PDF export
+            # Grid-Based PDF export
             try:
                 from reportlab.lib import colors
                 from reportlab.lib.pagesizes import landscape, letter
@@ -469,35 +482,31 @@ def main_chat():
                 st.error(f"PDF Export error: {e}")
 
         # History list
-        past_queries = [m["content"] for m in st.session_state.chat_history if m["role"] == "user"]
-        if past_queries:
-            for q in reversed(past_queries[-8:]):
-                label = q[:35] + "…" if len(q) > 37 else q
-                st.markdown(
-                    f'<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;'
-                    f'border-radius:6px;cursor:pointer;font-size:0.88em;">'
-                    f'<span style="opacity:.5;">☐</span>{label}</div>',
-                    unsafe_allow_html=True
-                )
+        sessions = get_user_sessions(st.session_state.user_id)
+        
+        st.markdown("<div style='margin-top:15px;margin-bottom:8px;font-size:0.85em;color:#64748b;font-weight:600;'>History</div>", unsafe_allow_html=True)
+        
+        if sessions:
+            for s in sessions[:15]:  # Limit to 15 recent sessions
+                col1, col2 = st.columns([0.85, 0.15], gap="small")
+                btn_title = s['title']
+                
+                with col1:
+                    if st.button(f"{btn_title}", key=f"sess_{s['session_id']}", use_container_width=True):
+                        st.session_state.current_session_id = s["session_id"]
+                        if "chat_history" in st.session_state:
+                             del st.session_state["chat_history"]
+                        st.rerun()
+                with col2:
+                    if st.button("×", key=f"del_{s['session_id']}", use_container_width=True):
+                        clear_chat_history(st.session_state.user_id, session_id=s['session_id'])
+                        if st.session_state.current_session_id == s['session_id']:
+                            st.session_state.current_session_id = str(uuid.uuid4())
+                            if "chat_history" in st.session_state:
+                                 del st.session_state["chat_history"]
+                        st.rerun()
         else:
-            samples = [
-                "Explain course registration...",
-                "What are office hours for...",
-                "How to apply for scholarships",
-                "Campus map directions to...",
-                "Graduation requirements",
-                "Library resources for...",
-                "Student housing options",
-                "Add/drop course deadline",
-            ]
-            for s in samples:
-                st.markdown(
-                    f'<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;'
-                    f'border-radius:6px;cursor:pointer;font-size:0.88em;opacity:.7;">'
-                    f'<span>☐</span>{s}</div>',
-                    unsafe_allow_html=True
-                )
-
+            st.markdown("<div style='font-size:0.8em;opacity:0.5;padding-left:10px;'>No previous chats</div>", unsafe_allow_html=True)
         st.markdown("""
         <div style="margin-top:auto;padding:20px 0 0 0;">
             <hr style="border-color:#2e3650;margin-bottom:12px;">
@@ -510,7 +519,7 @@ def main_chat():
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("↩  New Identity / Logout", use_container_width=True, key="logout"):
+        if st.button("New Identity / Logout", use_container_width=True, key="logout"):
             st.session_state.clear()
             st.query_params.clear()
             st.rerun()
@@ -519,7 +528,7 @@ def main_chat():
     if st.session_state.current_view == "explorer":
         course_explorer_view()
     else:
-        # Header matching screenshot
+        # Header
         st.markdown("""
             <div class="custom-header">
                 <div class="header-icon">
@@ -534,14 +543,11 @@ def main_chat():
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
                 
-        # FORCE RE-INITIALIZATION IF CODE UPDATED
-        if "code_ver" not in st.session_state:
-            from src.chuka_graphrag_pipeline import GraphRAGAssistant
-            st.session_state.assistant = GraphRAGAssistant()
-            st.session_state.code_ver = 1.0
+        # Access the globally cached assistant
+        assistant = get_assistant()
 
-        # ── NATIVE CHAT INPUT WITH FILE/AUDIO (Streamlit 1.38+) ─────────
-        # This matches the user's screenshot exactly!
+        #CHAT INPUT WITH FILE/AUDIO 
+
         prompt = st.chat_input(
             "Ask the University Assistant...", 
             accept_file=True, 
@@ -558,7 +564,7 @@ def main_chat():
             # Handle audio upload
             if getattr(prompt, "audio", None):
                 with st.spinner("Transcribing audio..."):
-                    audio_transcription = st.session_state.assistant.transcribe_audio(prompt.audio.read())
+                    audio_transcription = assistant.transcribe_audio(prompt.audio.read())
                     if audio_transcription:
                         if final_prompt: 
                             final_prompt += f"\n[Voice Transcription]: {audio_transcription}"
@@ -581,7 +587,7 @@ def main_chat():
             with st.chat_message("assistant"):
                 with st.spinner(""):
                     try:
-                        response = st.session_state.assistant.generate_response(
+                        response = assistant.generate_response(
                             final_prompt,
                             st.session_state.user_profile,
                             extra_context=st.session_state.get("extra_context", "")
@@ -591,10 +597,10 @@ def main_chat():
                     st.markdown(response)
 
             st.session_state.chat_history.append({"role": "assistant", "content": response})
-            log_chat_history(st.session_state.user_id, final_prompt, response)
+            log_chat_history(st.session_state.user_id, st.session_state.current_session_id, final_prompt, response)
             st.rerun()
 
-# ── Router ────────────────────────────────────────────────────────────
+# Router
 if not st.session_state.user_profile:
     onboarding_screen()
 else:

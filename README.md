@@ -1,73 +1,91 @@
-# Chuka University GraphRAG Assistant
+# Chuka University GraphRAG Assistant 
 
 An intelligent, context-aware academic ecosystem designed to transform how 15,000+ Chuka University students interact with institutional data.
 
+---
 
+## Key Features
 
-## Mission
-In the current higher education landscape, students often face **Information Fragmentation**. Critical data—timetables, fee structures, past papers, and university policies—is scattered across disconnected PDF files, Word documents, and web repositories.
+- **Personalized AI Assistant**: A hybrid RAG system combining Graph (Neo4j) and Vector (FAISS) retrieval for pinpoint accuracy.
+- **ChatGPT-Style Sidebar**: Persistent chat history with multi-session tracking, granular deletion, and seamless conversation restoration.
+- **Multi-Modal Interaction**: Support for **Voice Dictation** (STT) and **PDF Document Analysis** (e.g., fee statements, personal timetables).
+- **Matrix Timetable Generation**: Dynamic, grid-based personal schedules that map CourseUnits to real-time physical slots using Neo4j relationships.
+- **Smart Fee Calculation**: Intelligent parsing of program fee structures to provide real-time cost breakdowns for students.
+- **Exam Repository Access**: Direct, metadata-sorted links to past exam papers hosted on the official university repository.
 
-This project implements a **GraphRAG (Graph Retrieval-Augmented Generation)** assistant that unifies these sources into a single, conversational interface. It solves:
-- **Fragmentation**: One portal for all academic metadata.
-- **Lack of Personalization**: Responses are tailored to your Program, Year, and Semester.
-- **Manual Search**: Replaces 20-minute manual PDF searches with 2-second AI responses.
+---
 
-## How It Works: The Hybrid Brain
-The assistant uses a "Dual-Layer" retrieval strategy to ensure maximum accuracy:
+##  How It Works: The Hybrid Architecture
 
-### 1. The Knowledge Graph (Structured) -> **Neo4j**
-Models the university as a living network (Faculties > Departments > Programs > Units).
-- **Use Case**: "What units do I take?" or "Who teaches COSC 121?".
-- **Benefit**: Captures complex hierarchical relationships that standard AI usually misses.
+The assistant leverages a **Dual-Layer Retrieval strategy** coordinated by the **Google Gemini 2.5 Flash** LLM:
 
-### 2. The Semantic Index (Unstructured) -> **FAISS**
-Indexes thousands of text chunks from the **Student Handbook** and **University Policies**.
-- **Use Case**: "How do I defer my studies?" or "What is the exam policy for missed marks?".
-- **Benefit**: Finds relevant procedures even if the user doesn't use the exact technical terms.
+1. **Structured Layer (Neo4j)**:
+   - Models the university hierarchy: `Faculty ➔ Department ➔ Programme ➔ CourseUnit`.
+   - Links units to `TimetableSlot` and `Room` nodes for real-time scheduling.
+2. **Unstructured Layer (FAISS)**:
+   - Vector index of the **Student Handbook**, **University Statutes**, and **Academic Policies**.
+   - Uses the `all-mpnet-base-v2` embedding model for high-fidelity semantic search.
+3. **Synthesis Engine**:
+   - Classifies user intent and routes queries to the appropriate layer.
+   - Grounded responses with zero hallucinations via strict context injection.
 
-### 3. The LLM Synthesis -> **Google Gemini 2.0**
-The "Director" that coordinates the two layers.
-- It **classifies** your intent.
-- It **extracts** entities (unit codes, dates).
-- It **generates** a human-like response grounded in real data (no hallucinations).
+---
 
+##  Project Structure
 
+- `app.py`: High-fidelity Streamlit interface with dark-mode sidebar and integrated chat input.
+- `src/chuka_graphrag_pipeline.py`: The core LLM orchestration engine with `tenacity` retry logic and modular Cypher handlers.
+- `src/ingest_timetable.py`: Unified dual-mode ingestion tool for mapping CSV schedules to the Graph.
+- `src/database.py`: Persistent user state management via PostgreSQL with SQLAlchemy connection pooling.
+- `src/pdf_handler.py`: Specialized parser for Chuka-formatted academic documents.
 
-## Key Functionalities
-- **Smart Timetable**: Generates personalized schedules filtered by the current day or week.
-- **Fee Calculator**: Automatically calculates total program costs based on real-time tuition data.
-- **Exam Repository**: Direct links to past papers on `repository.chuka.ac.ke` with sorted metadata.
-- **Privacy-First**: Identity is managed locally via anonymous device tokens—no passwords required.
+---
 
+##  Getting Started
 
-
-## Getting Started
-
-### Installation
+### 1. Installation
 ```bash
 pip install -r requirements.txt
 ```
 
-### Configuration
-Configure your credentials in a `.env` file (Neo4j AuraDB + Gemini API Keys).
+### 2. Database Setup
+- Ensure a **Neo4j AuraDB** (or local) instance is running.
+- Ensure a **PostgreSQL** instance is available for chat history persistence.
+- Configure your `.env` file with the following keys:
+  ```env
+  GOOGLE_API_KEY=your_gemini_key
+  NEO4J_URI=bolt://...
+  NEO4J_USERNAME=neo4j
+  NEO4J_PASSWORD=your_password
+  DATABASE_URL=postgresql://...
+  ```
 
-### Execution
+### 3. Data Ingestion
+Map the latest university timetable to the Knowledge Graph:
+```bash
+# Full wipe and re-ingest (for fresh semesters)
+python src/ingest_timetable.py --mode full
+
+# Incremental gap-fill (only map missing units)
+python src/ingest_timetable.py --mode incremental
+```
+
+### 4. Run the Application
 ```bash
 streamlit run app.py
 ```
 
+---
 
-
-##  Technical Stack
-- **Core Engine**: Python 3.10
+##  Tech Stack
+- **LLM**: Google Gemini 2.5 Flash
 - **Knowledge Graph**: Neo4j (Cypher)
-- **Vector Database**: FAISS (all-mpnet-base-v2)
-- **LLM**: Google Gemini 2.0 Flash
-- **Web UI**: Streamlit
-- **Database**: PostgreSQL (User State Persistence)
+- **Vector DB**: FAISS
+- **Backend**: Python 3.10, SQLAlchemy, PostgreSQL
+- **Frontend**: Streamlit (Premium Custom CSS)
+- **Document Processing**: PyPDF2, pdfplumber
 
 ---
 
 ## Authors
 **Dancun Mau Wainaina**
-

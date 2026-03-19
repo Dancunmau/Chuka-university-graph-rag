@@ -4,7 +4,7 @@ chuka_graphrag_pipeline.py
 ==========================
 The core GraphRAG orchestration layer for the Chuka University Expert System.
 
-Architecture (per proposal §5.2):
+Architecture:
   1. classify_intent()    → Gemini decides retrieval route
   2. extract_entities()   → regex + Gemini extracts course codes, programme, year, sem
   3. retrieve_from_graph() → Cypher traversal in Neo4j
@@ -19,10 +19,12 @@ import json
 import pickle
 import logging
 import numpy as np
+import typing_extensions as typing
+from tenacity import retry, wait_exponential, stop_after_attempt
 
 from dotenv import load_dotenv
-from neo4j import GraphDatabase
 import google.generativeai as genai
+from neo4j import GraphDatabase
 
 #Optional imports (degrade gracefully if missing
 try:
@@ -55,31 +57,23 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("ChukaPipeline")
 
 
-def _gemini_call(prompt: str, model_name="gemini-1.5-flash", retries=3) -> str:
-    """Call Gemini with exponential back-off for free-tier rate limits."""
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(4))
+def _gemini_call(prompt: str, model_name="gemini-2.5-flash") -> str:
+    """Call Gemini with exponential back-off via tenacity and robust key rotation."""
     global current_key_idx
-    import time
-    delay = 5
-
-    for attempt in range(retries):
-        try:
-            genai.configure(api_key=GEMINI_KEYS[current_key_idx])
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            err = str(e)
-            if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
-                if len(GEMINI_KEYS) > 1:
-                    current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
-                    log.warning(f"Rotating to API Key #{current_key_idx + 1}")
-                    continue
-                if attempt < retries - 1:
-                    time.sleep(delay)
-                    delay *= 2
-                else: return ""
-            else: return ""
-    return ""
+    try:
+        genai.configure(api_key=GEMINI_KEYS[current_key_idx])
+        model = genai.GenerativeModel(model_name)
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        err = str(e)
+        if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
+            if len(GEMINI_KEYS) > 1:
+                current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
+                log.warning(f"Rotating to API Key #{current_key_idx + 1}")
+        log.warning(f"Gemini API Error: {err}. Retrying...")
+        raise e  # Let tenacity handle the backoff
 
 
 
@@ -114,7 +108,7 @@ def extract_entities(query: str, profile: dict) -> dict:
     """
     Extract structured entities from the query.
     Returns dict with keys: course_code, programme, year, semester
-    Falls back to the student's profile where not specified.
+    Falls back to regex parse if the LLM output deviates from JSON.
     """
     prompt = f"""Extract academic entities from this Chuka University student query.
 Query: "{query}"
@@ -131,12 +125,11 @@ Return valid JSON only, with these keys (use null if not found):
 }}"""
 
     raw = _gemini_call(prompt)
-    # Clean markdown code fences
     raw = re.sub(r"```(?:json)?", "", raw).strip()
     try:
         entities = json.loads(raw)
-    except Exception:
-        # Fallback: regex parse for course code at minimum
+    except Exception as e:
+        log.error(f"Structured extraction failed: {e}. Using regex fallback.")
         entities = {"course_code": None, "programme": None, "year": None, "semester": None, "day": None, "topic": None}
         m_code = re.search(r'\b([A-Z]{3,5})\s*(\d{3,4})\b', query.upper())
         if m_code:
@@ -147,6 +140,7 @@ Return valid JSON only, with these keys (use null if not found):
             if d.lower() in query.lower():
                 entities["day"] = d
                 break
+    return entities
 
     # Fill from profile where missing
     if profile:
@@ -161,243 +155,267 @@ Return valid JSON only, with these keys (use null if not found):
 
 
 
-#  3. Graph Retrieval (Neo4j)
+#  3. Graph Retrieval (Neo4j) Helper Methods
+def _query_past_papers(session, query: str, entities: dict) -> list:
+    results = []
+    code = entities.get("course_code")
+    topic = entities.get("topic")
+    if code:
+        r = session.run("""
+        MATCH (c:CourseUnit)-[:HAS_PAST_PAPER]->(p:PastPaper)
+        WHERE c.code =~ $pattern
+        RETURN c.code as code, c.name as name,
+               p.title as title, p.year as year, p.link as link
+        ORDER BY p.year DESC LIMIT 10
+        """, pattern=f"(?i).*{re.escape(code)}.*")
+        rows = r.data()
+        if rows:
+            results.append(f"Past papers for {code}:")
+            for row in rows:
+                results.append(f"  - [{row['year']}] {row['title']}\n    Link: {row['link']}")
+    elif topic and "past paper" in str(query).lower():
+        r = session.run("""
+        MATCH (c:CourseUnit)-[:HAS_PAST_PAPER]->(p:PastPaper)
+        WHERE p.title =~ $pattern
+        RETURN c.code as code, c.name as name,
+               p.title as title, p.year as year, p.link as link
+        ORDER BY p.year DESC LIMIT 10
+        """, pattern=f"(?i).*{re.escape(topic)}.*")
+        rows = r.data()
+        if rows:
+            results.append(f"Past papers matching '{topic}':")
+            for row in rows:
+                results.append(f"  - [{row['year']}] {row['title']}\n    Link: {row['link']}")
+    return results
+
+def _query_units(session, entities: dict) -> list:
+    results = []
+    prog = entities.get("programme")
+    year = entities.get("year")
+    sem = entities.get("semester")
+    day = entities.get("day")
+    
+    if not prog: return results
+    
+    params = {"prog": prog}
+    cypher = """
+    MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
+    WHERE p.name =~ ('(?i).*' + $prog + '.*')
+    """
+    if year:
+        cypher += " AND r.year = $year"
+        params["year"] = f"Year {year}"
+    if sem:
+        cypher += " AND r.semester = toInteger($sem)"
+        params["sem"] = str(sem)
+
+    cypher += "\nOPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)"
+    if day:
+        cypher += " WHERE t.day =~ ('(?i)' + $day)"
+        params["day"] = day
+
+    cypher += """
+    RETURN u.code as code, u.name as name,
+           r.year as level, r.semester as semester,
+           collect(t.raw_text) as timeslots
+    ORDER BY u.code LIMIT 20
+    """
+    r = session.run(cypher, **params)
+    rows = r.data()
+    if rows:
+        header = f"Units for {prog}"
+        if year: header += f" Year {year}"
+        if sem:  header += f" Sem {sem}"
+        results.append(header + ":")
+        for row in rows:
+            slot_str = ""
+            if row.get('timeslots') and any(row['timeslots']):
+                slot_str = " | ".join([s for s in row['timeslots'] if s])
+                slot_str = f"\n    Timetable: {slot_str}"
+            results.append(f"  - {row['code']}: {row['name']}{slot_str}")
+    return results
+
+def _query_fees(session, query: str, entities: dict) -> list:
+    results = []
+    prog = entities.get("programme")
+    if not prog: return results
+    
+    fee_keywords = ["fee", "cost", "pay", "tuition", "amount", "price", "charge", "how much"]
+    wants_fees = any(kw in str(query).lower() for kw in fee_keywords)
+    if wants_fees:
+        r = session.run("""
+        MATCH (p:Programme)
+        WHERE p.name =~ ('(?i).*' + $prog + '.*')
+        RETURN p.name as name, p.fee_string as fee, p.duration_string as duration
+        """, prog=prog)
+        rows = r.data()
+        if rows:
+            p_data = rows[0]
+            fee_info = p_data.get('fee') or 'Not listed'
+            dur_info = p_data.get('duration') or 'Not listed'
+            results.append(f"Fee Structure for {p_data['name']}:")
+            results.append(f"  - Fees: {fee_info}")
+            results.append(f"  - Duration: {dur_info}")
+            
+            # FR7.2: Total Cost Calculation
+            if "total" in str(query).lower() or "how much" in str(query).lower():
+                try:
+                    amount = re.search(r'(\d{1,3}(?:,\d{3})*)', fee_info.replace(',', ''))
+                    num_sems = re.search(r'(\d+)', dur_info)
+                    if amount and num_sems:
+                        total = int(amount.group(1).replace(',', '')) * int(num_sems.group(1))
+                        results.append(f"  - Estimated Total Program Cost: KES {total:,}")
+                except: pass
+    return results
+
+def _query_resources(session, query: str, entities: dict) -> list:
+    results = []
+    code = entities.get("course_code")
+    topic = entities.get("topic")
+    if code:
+        r = session.run("""
+        MATCH (c:CourseUnit)-[:HAS_RESOURCE]->(ri:RepositoryItem)
+        WHERE c.code =~ $pattern
+        RETURN ri.title as title, ri.author as author,
+               ri.type as type, ri.year as year,
+               ri.community as community, ri.link as link
+        ORDER BY ri.year DESC LIMIT 8
+        """, pattern=f"(?i).*{re.escape(code)}.*")
+        rows = r.data()
+        if rows:
+            results.append(f"Study resources for {code}:")
+            for row in rows:
+                author_str = f" — {row['author']}" if row.get('author') else ""
+                results.append(
+                    f"  - [{row.get('type','Resource')}] {row['title']}{author_str}\n"
+                    f"    Link: {row['link']}"
+                )
+    elif topic:
+        r = session.run("""
+        MATCH (ri:RepositoryItem)
+        WHERE ri.title =~ $pattern
+        RETURN ri.title as title, ri.author as author,
+               ri.type as type, ri.year as year,
+               ri.community as community, ri.link as link
+        ORDER BY ri.year DESC LIMIT 8
+        """, pattern=f"(?i).*{re.escape(topic)}.*")
+        rows = r.data()
+        if rows:
+            results.append(f"Repository resources matching '{topic}':")
+            for row in rows:
+                author_str = f" — {row.get('author','')}" if row.get('author') else ""
+                results.append(
+                    f"  - [{row.get('type','Resource')}] {row['title']}{author_str}\n"
+                    f"    Link: {row['link']}"
+                )
+    return results
+
+def _query_current_units(session) -> list:
+    results = []
+    r = session.run("""
+    MATCH (u:CourseUnit)-[:HAS_TIMESLOT]->(t:TimetableSlot)
+    WHERE u.is_current = 1
+    RETURN u.code as code, u.name as name, collect(t.raw_text) as timeslots
+    LIMIT 15
+    """)
+    rows = r.data()
+    if rows:
+        results.append("Units currently offered (Jan-April 2026):")
+        for row in rows:
+            slot_str = " | ".join([s for s in row['timeslots'] if s])
+            results.append(f"  - {row['code']}: {row['name']}\n    Timetable: {slot_str}")
+    return results
+
+def _query_catalogue(session, query: str) -> list:
+    results = []
+    faculty_keywords = {
+        "science":     "Science",
+        "technology":  "Science",
+        "business":    "Business",
+        "economics":   "Business",
+        "education":   "Education",
+        "agriculture": "Agriculture",
+        "environment": "Agriculture",
+        "humanities":  "Humanities",
+        "social":      "Humanities",
+        "nursing":     "Nursing",
+        "health":      "Nursing",
+        "law":         "Law",
+        "engineering": "Engineering",
+    }
+    q_lower = query.lower()
+    faculty_filter = next(
+        (label for kw, label in faculty_keywords.items() if kw in q_lower),
+        None
+    )
+
+    if faculty_filter:
+        r = session.run("""
+        MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
+              -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
+        WHERE f.name =~ $pattern
+        RETURN f.name AS faculty, d.name AS department, p.name AS programme
+        ORDER BY d.name, p.name
+        """, pattern=f"(?i).*{faculty_filter}.*")
+        header = f"Programmes offered (Faculty of {faculty_filter}):"
+    else:
+        r = session.run("""
+        MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
+              -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
+        RETURN f.name AS faculty, d.name AS department, p.name AS programme
+        ORDER BY f.name, d.name, p.name
+        """)
+        header = "All programmes offered at Chuka University:"
+
+    rows = r.data()
+    if rows:
+        results.append(header)
+        current_dept = None
+        for row in rows:
+            if row['department'] != current_dept:
+                current_dept = row['department']
+                results.append(f"\n  [{current_dept}]")
+            results.append(f"    - {row['programme']}")
+    return results
+
+# 3. Main Graph Retrieval Function
 def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> str:
-    """Run Cypher queries against Neo4j and return formatted context."""
+    """Run Cypher queries against Neo4j by routing to specific handler functions."""
     results = []
 
     try:
         with driver.session() as session:
-
-            # (A) Past papers for a specific unit code or topic
-            code = entities.get("course_code")
-            topic = entities.get("topic")
-            prog = entities.get("programme")
-            year = entities.get("year")
-            sem = entities.get("semester")
-            day = entities.get("day")
+            # (A) Past papers
+            results.extend(_query_past_papers(session, query, entities))
             
-            if code:
-                r = session.run("""
-                MATCH (c:CourseUnit)-[:HAS_PAST_PAPER]->(p:PastPaper)
-                WHERE c.code =~ $pattern
-                RETURN c.code as code, c.name as name,
-                       p.title as title, p.year as year, p.link as link
-                ORDER BY p.year DESC LIMIT 10
-                """, pattern=f"(?i).*{re.escape(code)}.*")
-                rows = r.data()
-                if rows:
-                    results.append(f"Past papers for {code}:")
-                    for row in rows:
-                        results.append(f"  - [{row['year']}] {row['title']}\n    Link: {row['link']}")
-            elif topic and "past paper" in str(query).lower():
-                r = session.run("""
-                MATCH (c:CourseUnit)-[:HAS_PAST_PAPER]->(p:PastPaper)
-                WHERE p.title =~ $pattern
-                RETURN c.code as code, c.name as name,
-                       p.title as title, p.year as year, p.link as link
-                ORDER BY p.year DESC LIMIT 10
-                """, pattern=f"(?i).*{re.escape(topic)}.*")
-                rows = r.data()
-                if rows:
-                    results.append(f"Past papers matching '{topic}':")
-                    for row in rows:
-                        results.append(f"  - [{row['year']}] {row['title']}\n    Link: {row['link']}")
-
-            if prog:
-                params = {"prog": prog}
-                cypher = """
-                MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
-                WHERE p.name =~ ('(?i).*' + $prog + '.*')
-                """
-                if year:
-                    cypher += " AND r.year = $year"
-                    params["year"] = f"Year {year}"
-                if sem:
-                    cypher += " AND r.semester = toInteger($sem)"
-                    params["sem"] = str(sem)
-
-                cypher += """
-                OPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)
-                """
-                if day:
-                    cypher += " WHERE t.day =~ ('(?i)' + $day)"
-                    params["day"] = day
-
-                cypher += """
-                RETURN u.code as code, u.name as name,
-                       r.year as level, r.semester as semester,
-                       collect(t.raw_text) as timeslots
-                ORDER BY u.code LIMIT 20
-                """
-                r = session.run(cypher, **params)
-                rows = r.data()
-                if rows:
-                    header = f"Units for {prog}"
-                    if year: header += f" Year {year}"
-                    if sem:  header += f" Sem {sem}"
-                    results.append(header + ":")
-                    for row in rows:
-                        slot_str = ""
-                        if row.get('timeslots') and any(row['timeslots']):
-                            slot_str = " | ".join([s for s in row['timeslots'] if s])
-                            slot_str = f"\n    Timetable: {slot_str}"
-                        results.append(f"  - {row['code']}: {row['name']}{slot_str}")
-
-            # (C) Fee inquiries — query Programme node for fee_string / duration_string
-            fee_keywords = ["fee", "cost", "pay", "tuition", "amount", "price", "charge", "how much"]
-            wants_fees = any(kw in str(query).lower() for kw in fee_keywords)
-            if wants_fees and prog:
-                r = session.run("""
-                MATCH (p:Programme)
-                WHERE p.name =~ ('(?i).*' + $prog + '.*')
-                RETURN p.name as name, p.fee_string as fee, p.duration_string as duration
-                """, prog=prog)
-                rows = r.data()
-                if rows:
-                    p_data = rows[0]
-                    fee_info = p_data.get('fee') or 'Not listed'
-                    dur_info = p_data.get('duration') or 'Not listed'
-                    results.append(f"Fee Structure for {p_data['name']}:")
-                    results.append(f"  - Fees: {fee_info}")
-                    results.append(f"  - Duration: {dur_info}")
-                    
-                    # FR7.2: Total Cost Calculation
-                    if "total" in str(query).lower() or "how much" in str(query).lower():
-                        try:
-                            # Simple parser for "KES 55,000" and "8 semesters"
-                            amount = re.search(r'(\d{1,3}(?:,\d{3})*)', fee_info.replace(',', ''))
-                            num_sems = re.search(r'(\d+)', dur_info)
-                            if amount and num_sems:
-                                total = int(amount.group(1).replace(',', '')) * int(num_sems.group(1))
-                                results.append(f"  - Estimated Total Program Cost: KES {total:,}")
-                        except: pass
-
-
-            # (D) Repository items (lecture notes / research papers) by unit or topic
-            resource_keywords = ["note", "material", "resource", "lecture", "paper", "book",
-                                  "chapter", "article", "research", "find", "read", "document"]
+            # (B) & (C) Units & Fees
+            results.extend(_query_units(session, entities))
+            results.extend(_query_fees(session, query, entities))
+            
+            # (D) Repository items
+            resource_keywords = ["note", "material", "resource", "lecture", "paper", "book", "chapter", "article", "research", "find", "read", "document"]
             wants_resource = any(kw in str(query).lower() for kw in resource_keywords)
-            if wants_resource or (not results):   # also try when nothing else matched
-                if code:
-                    r = session.run("""
-                    MATCH (c:CourseUnit)-[:HAS_RESOURCE]->(ri:RepositoryItem)
-                    WHERE c.code =~ $pattern
-                    RETURN ri.title as title, ri.author as author,
-                           ri.type as type, ri.year as year,
-                           ri.community as community, ri.link as link
-                    ORDER BY ri.year DESC LIMIT 8
-                    """, pattern=f"(?i).*{re.escape(code)}.*")
-                    rows = r.data()
-                    if rows:
-                        results.append(f"Study resources for {code}:")
-                        for row in rows:
-                            author_str = f" — {row['author']}" if row.get('author') else ""
-                            results.append(
-                                f"  - [{row.get('type','Resource')}] {row['title']}{author_str}\n"
-                                f"    Link: {row['link']}"
-                            )
-                elif topic:
-                    r = session.run("""
-                    MATCH (ri:RepositoryItem)
-                    WHERE ri.title =~ $pattern
-                    RETURN ri.title as title, ri.author as author,
-                           ri.type as type, ri.year as year,
-                           ri.community as community, ri.link as link
-                    ORDER BY ri.year DESC LIMIT 8
-                    """, pattern=f"(?i).*{re.escape(topic)}.*")
-                    rows = r.data()
-                    if rows:
-                        results.append(f"Repository resources matching '{topic}':")
-                        for row in rows:
-                            author_str = f" — {row.get('author','')}" if row.get('author') else ""
-                            results.append(
-                                f"  - [{row.get('type','Resource')}] {row['title']}{author_str}\n"
-                                f"    Link: {row['link']}"
-                            )
-
-
+            if wants_resource or not results:
+                results.extend(_query_resources(session, query, entities))
+            
+            # Current Units
+            code = entities.get("course_code")
+            prog = entities.get("programme")
             if (not code and not prog) or "current" in str(entities.get("topic","")).lower() or "this semester" in str(profile).lower():
-                r = session.run("""
-                MATCH (u:CourseUnit)-[:HAS_TIMESLOT]->(t:TimetableSlot)
-                WHERE u.is_current = 1
-                RETURN u.code as code, u.name as name, collect(t.raw_text) as timeslots
-                LIMIT 15
-                """)
-                rows = r.data()
-                if rows:
-                    results.append("Units currently offered (Jan-April 2026):")
-                    for row in rows:
-                        slot_str = " | ".join([s for s in row['timeslots'] if s])
-                        results.append(f"  - {row['code']}: {row['name']}\n    Timetable: {slot_str}")
-
-            # (E) Programme catalogue — Faculty -> Department -> Program
-            # Triggers on "what programmes", "what courses", "what can I study", "programmes offered" etc.
-            catalogue_keywords = [
-                "what programme", "what program", "programmes offered", "programs offered",
-                "what can i study", "what do you offer", "available programme", "available program",
-                "list of programme", "list of program", "courses offered", "what courses",
-                "which programme", "which program", "study at chuka", "offered at chuka",
-            ]
-            wants_catalogue = any(kw in query.lower() for kw in catalogue_keywords)
-
+                if len(results) < 3: 
+                    results.extend(_query_current_units(session))
+            
+            # (E) Catalogue
+            catalogue_keywords = ["what programme", "what program", "programmes offered", "programs offered", "what can i study", "what do you offer", "available programme", "available program", "list of programme", "list of program", "courses offered", "what courses", "which programme", "which program", "study at chuka", "offered at chuka"]
+            wants_catalogue = any(kw in str(query).lower() for kw in catalogue_keywords)
             if wants_catalogue and not results:
-                # Try to detect a faculty keyword in the raw query
-                faculty_keywords = {
-                    "science":     "Science",
-                    "technology":  "Science",
-                    "business":    "Business",
-                    "economics":   "Business",
-                    "education":   "Education",
-                    "agriculture": "Agriculture",
-                    "environment": "Agriculture",
-                    "humanities":  "Humanities",
-                    "social":      "Humanities",
-                    "nursing":     "Nursing",
-                    "health":      "Nursing",
-                    "law":         "Law",
-                    "engineering": "Engineering",
-                }
-                q_lower = query.lower()
-                faculty_filter = next(
-                    (label for kw, label in faculty_keywords.items() if kw in q_lower),
-                    None
-                )
-
-                if faculty_filter:
-                    r = session.run("""
-                    MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
-                          -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
-                    WHERE f.name =~ $pattern
-                    RETURN f.name AS faculty, d.name AS department, p.name AS programme
-                    ORDER BY d.name, p.name
-                    """, pattern=f"(?i).*{faculty_filter}.*")
-                    header = f"Programmes offered (Faculty of {faculty_filter}):"
-                else:
-                    r = session.run("""
-                    MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
-                          -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
-                    RETURN f.name AS faculty, d.name AS department, p.name AS programme
-                    ORDER BY f.name, d.name, p.name
-                    """)
-                    header = "All programmes offered at Chuka University:"
-
-                rows = r.data()
-                if rows:
-                    results.append(header)
-                    current_dept = None
-                    for row in rows:
-                        if row['department'] != current_dept:
-                            current_dept = row['department']
-                            results.append(f"\n  [{current_dept}]")
-                        results.append(f"    - {row['programme']}")
+                results.extend(_query_catalogue(session, query))
 
     except Exception as e:
         err_str = str(e)
         log.error(f"Graph retrieval error: {err_str}")
         if "Cannot resolve address" in err_str or "ServiceUnavailable" in err_str:
             log.warning("Neo4j database appears to be offline or unreachable. Check NEO4J_URI in .env")
-        # Do NOT append raw error string to results — it would surface to the student
 
     return "\n".join(results) if results else ""
 
@@ -588,10 +606,13 @@ class GraphRAGAssistant:
         
         return response
 
+    @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(3))
     def transcribe_audio(self, audio_bytes: bytes) -> str:
-        """Transcribe audio bytes using Gemini 1.5 Flash."""
+        """Transcribe audio bytes using Gemini 2.5 Flash."""
+        global current_key_idx
         try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            genai.configure(api_key=GEMINI_KEYS[current_key_idx])
+            model = genai.GenerativeModel("gemini-2.5-flash")
             # Create a Part from audio bytes
             audio_part = {
                 "mime_type": "audio/wav", # Streamlit audio_input records as wav usually
@@ -601,8 +622,12 @@ class GraphRAGAssistant:
             response = model.generate_content([prompt, audio_part])
             return response.text.strip()
         except Exception as e:
-            log.error(f"Transcription error: {e}")
-            return ""
+            err = str(e)
+            if "429" in err or "quota" in err.lower() or "rate" in err.lower():
+                if len(GEMINI_KEYS) > 1:
+                    current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
+            log.error(f"Transcription error: {err}. Retrying...")
+            raise e
 
     def get_mapped_programmes(self) -> list:
         """Fetch programmes that have at least one course unit mapped to them, with counts."""
@@ -637,8 +662,8 @@ class GraphRAGAssistant:
                 cypher += " AND r.year = $year"
                 params["year"] = f"Year {year}"
             if sem:
-                cypher += " AND r.semester = toInteger($sem)"
-                params["sem"] = str(sem)
+                cypher += " AND r.semester = $sem"
+                params["sem"] = int(sem)
             
             cypher += """
             OPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)

@@ -1,18 +1,25 @@
 import os
 import uuid
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# We use PostgreSQL for production-ready data persistence as per the project proposal.
+# PostgreSQL for production-ready data persistence as per the project proposal.
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
     raise ValueError("DATABASE_URL must be a valid PostgreSQL connection string (starting with 'postgresql://')")
 
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(
+    DATABASE_URL, 
+    echo=False,
+    pool_size=20,          # Standard number of persistent connections to keep open
+    max_overflow=10,       # Allow bursting up to 30 connections during spikes
+    pool_timeout=30,       # Wait max 30 seconds to get a connection before throwing timeout
+    pool_recycle=1800      # Recycle connections every 30 minutes to drop dead/stale DB sockets
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -45,6 +52,7 @@ class History(Base):
     
     history_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
+    session_id = Column(String(100), index=True, nullable=True)
     query_text = Column(Text)
     response_text = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
@@ -53,6 +61,15 @@ class History(Base):
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Safely add session_id column to existing table to prevent crashing
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE history ADD COLUMN session_id VARCHAR(100)"))
+        conn.execute(text("CREATE INDEX ix_history_session_id ON history (session_id)"))
+        conn.commit()
+except Exception:
+    pass # Column likely already exists
 
 def get_or_create_user(device_token=None):
     """Retrieve user by token, or create a new one. Returns a plain dict."""
@@ -96,12 +113,13 @@ def save_user_profile(user_id, faculty, program, year_of_study, semester):
     finally:
         db.close()
 
-def log_chat_history(user_id, query_text, response_text):
+def log_chat_history(user_id, session_id, query_text, response_text):
     """Store the chat history for the user session"""
     db = SessionLocal()
     try:
         chat = History(
             user_id=user_id,
+            session_id=session_id,
             query_text=query_text,
             response_text=response_text
         )
@@ -110,20 +128,46 @@ def log_chat_history(user_id, query_text, response_text):
     finally:
         db.close()
 
-def get_chat_history(user_id, limit=50):
+def get_chat_history(user_id, session_id=None, limit=100):
     """Fetch previous chat history for UI rendering"""
     db = SessionLocal()
     try:
-        history = db.query(History).filter(History.user_id == user_id).order_by(History.timestamp.asc()).limit(limit).all()
+        query = db.query(History).filter(History.user_id == user_id)
+        if session_id:
+            if session_id == "default":
+                query = query.filter(History.session_id.is_(None))
+            else:
+                query = query.filter(History.session_id == session_id)
+        history = query.order_by(History.timestamp.asc()).limit(limit).all()
         return history
     finally:
         db.close()
 
-def clear_chat_history(user_id):
-    """Delete all chat history records for a specific user ID"""
+def get_user_sessions(user_id):
+    """Get all distinct chat sessions for the sidebar"""
     db = SessionLocal()
     try:
-        db.query(History).filter(History.user_id == user_id).delete()
+        history = db.query(History).filter(History.user_id == user_id).order_by(History.timestamp.asc()).all()
+        sessions = {}
+        for h in history:
+            sid = h.session_id or "default"
+            if sid not in sessions:
+                title = h.query_text[:30] + "..." if len(h.query_text) > 30 else h.query_text
+                sessions[sid] = {"session_id": sid, "title": title, "timestamp": h.timestamp}
+        
+        # sort by timestamp desc
+        return sorted(sessions.values(), key=lambda x: x["timestamp"], reverse=True)
+    finally:
+        db.close()
+
+def clear_chat_history(user_id, session_id=None):
+    """Delete all chat history records or a specific session"""
+    db = SessionLocal()
+    try:
+        q = db.query(History).filter(History.user_id == user_id)
+        if session_id:
+            q = q.filter(History.session_id == session_id)
+        q.delete()
         db.commit()
     finally:
         db.close()
