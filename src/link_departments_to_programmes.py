@@ -71,8 +71,11 @@ def main():
             dept = lookup_dept[prog_name.lower()]
         if not dept:
             dept = fac # fallback
+        fee = str(row.get('fee_string', '')).strip()
+        duration = str(row.get('duration_string', '')).strip()
+        level = str(row.get('level', '')).strip()
             
-        csv_lookup.append((prog_name, fac, dept))
+        csv_lookup.append((prog_name, fac, dept, fee, duration, level))
 
     print(f"Loaded {len(csv_lookup)} programmes for matching.")
 
@@ -101,13 +104,20 @@ def main():
         best_faculty = None
         best_dept = None
 
-        for csv_name, csv_fac, csv_dept in csv_lookup:
+        best_fee = None
+        best_duration = None
+        best_level = None
+
+        for csv_name, csv_fac, csv_dept, fee, duration, level in csv_lookup:
             score = similarity(prog_name, csv_name)
             if score > best_score:
                 best_score = score
                 best_csv_name = csv_name
                 best_faculty = csv_fac
                 best_dept = csv_dept
+                best_fee = fee
+                best_duration = duration
+                best_level = level
 
         if best_score >= THRESHOLD and best_faculty:
             matched.append({
@@ -115,6 +125,9 @@ def main():
                 "csv_name":  best_csv_name,
                 "faculty":   best_faculty,
                 "department": best_dept,
+                "fee": best_fee,
+                "duration": best_duration,
+                "level": best_level,
                 "score":     round(best_score, 2),
             })
             print(f"  OK  [{best_score:.2f}] '{prog_name}'")
@@ -142,7 +155,7 @@ def main():
         return
 
     # 5. Write relationships
-    data = [{"programme": m["programme"], "department": m["department"], "faculty": m["faculty"]} for m in matched]
+    data = [{"programme": m["programme"], "department": m["department"], "faculty": m["faculty"], "csv_name": m["csv_name"], "fee": m["fee"], "duration": m["duration"], "level": m["level"]} for m in matched]
 
     with driver.session() as s:
         # First, purge old messy relationships
@@ -158,7 +171,19 @@ def main():
         
         // Link them definitively
         MERGE (f)-[:FACULTY_HAS_DEPARTMENT]->(d)
-        MERGE (d)-[:DEPARTMENT_OFFERS_PROGRAM]->(prog)
+        
+        // 1. Maintain dual-schema strictly: Programme (timetables) gets HAS_PROGRAMME
+        MERGE (d)-[:HAS_PROGRAMME]->(prog)
+        
+        // 2. Program (full catalog) gets DEPARTMENT_OFFERS_PROGRAM
+        WITH prog, f, d, row
+        MATCH (cat:Program {name: row.csv_name})
+        MERGE (d)-[:DEPARTMENT_OFFERS_PROGRAM]->(cat)
+        
+        // 3. Cross-pollinate fee strings and metadata from the catalog to the active Programme nodes
+        SET prog.fee_string = row.fee,
+            prog.duration_string = row.duration,
+            prog.level = row.level
         
         RETURN count(DISTINCT prog) AS created
         """, data=data)
@@ -167,7 +192,7 @@ def main():
 
         # Verify
         total = s.run("""
-            MATCH (org:Department)-[:DEPARTMENT_OFFERS_PROGRAM]->(p:Programme)
+            MATCH (org:Department)-[:HAS_PROGRAMME]->(p:Programme)
             RETURN count(*) AS n
         """).single()["n"]
 
