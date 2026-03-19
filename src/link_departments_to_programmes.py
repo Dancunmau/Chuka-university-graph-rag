@@ -29,7 +29,7 @@ from neo4j import GraphDatabase
 load_dotenv('d:/Jupyter notebook/Graph rag/.env')
 
 BASE = 'd:/Jupyter notebook/Graph rag'
-CSV_PATH = f'{BASE}/programs.csv'
+CSV_PATH = f'{BASE}/data/programs_final_linked.csv'
 
 driver = GraphDatabase.driver(
     os.getenv("NEO4J_URI"),
@@ -45,25 +45,17 @@ def similarity(a: str, b: str) -> float:
 
 def main():
     # ── 1. Load CSVs and merge in-memory to bypass file locks ────────
-    print("Loading data from programs_copy.csv and programs_new.csv...")
+    print("Loading data from programs_final_linked.csv...")
     try:
         import shutil
-        # Copy programs.csv to avoid Windows Excel locks
-        shutil.copy(f'{BASE}/programs.csv', f'{BASE}/programs_safe_read.csv')
-        df_all = pd.read_csv(f'{BASE}/programs_safe_read.csv').fillna('')
+        # Copy to avoid Windows Excel locks
+        shutil.copy(CSV_PATH, f'{BASE}/data/programs_safe_read.csv')
+        df_all = pd.read_csv(f'{BASE}/data/programs_safe_read.csv').fillna('')
     except Exception as e:
         print(f"Error loading programs: {e}")
         return
 
-    try:
-        df_dept = pd.read_csv(f'{BASE}/programs_new.csv').fillna('')
-        lookup_dept = {}
-        for _, row in df_dept.iterrows():
-            nk = str(row['name']).strip().lower()
-            if nk and row['department']:
-                lookup_dept[nk] = row['department']
-    except:
-        lookup_dept = {}
+    lookup_dept = {}
 
     csv_lookup = []
     # Build {name: (faculty, dept)} lookup from df_all
@@ -150,29 +142,24 @@ def main():
         return
 
     # 5. Write relationships
-    data = [{"programme": m["programme"], "department": m["department"]} for m in matched]
+    data = [{"programme": m["programme"], "department": m["department"], "faculty": m["faculty"]} for m in matched]
 
     with driver.session() as s:
-        # Match department by checking if it contains the core name (e.g. "Computer Sciences")
-        # because the CSV has "DEPARTMENT OF X" but Neo4j might have "Department of X" or just "X"
+        # First, purge old messy relationships
+        s.run("MATCH (p:Programme)<-[r:HAS_PROGRAMME|DEPARTMENT_OFFERS_PROGRAM|BELONGS_TO]-() DELETE r")
+        
         result = s.run("""
         UNWIND $data AS row
-        // Normalize: uppercase, replace 'AND' with '&' to handle variants
-        WITH row,
-             toUpper(row.department) AS dept_upper,
-             toUpper(replace(row.department, ' AND ', ' & ')) AS dept_amp
-        
-        MATCH (org)
-        WHERE (org:Department OR org:Faculty) 
-          AND (
-            toUpper(org.name) = dept_upper
-            OR toUpper(org.name) = dept_amp
-            OR dept_upper CONTAINS toUpper(org.name)
-            OR toUpper(org.name) CONTAINS dept_upper
-          )
-        
         MATCH (prog:Programme {name: row.programme})
-        MERGE (org)-[:HAS_PROGRAMME]->(prog)
+        
+        // Ensure Faculty and Department nodes exist explicitly
+        MERGE (f:Faculty {name: row.faculty})
+        MERGE (d:Department {name: row.department})
+        
+        // Link them definitively
+        MERGE (f)-[:FACULTY_HAS_DEPARTMENT]->(d)
+        MERGE (d)-[:DEPARTMENT_OFFERS_PROGRAM]->(prog)
+        
         RETURN count(DISTINCT prog) AS created
         """, data=data)
         
@@ -180,7 +167,7 @@ def main():
 
         # Verify
         total = s.run("""
-            MATCH (org)-[:HAS_PROGRAMME]->(p:Programme)
+            MATCH (org:Department)-[:DEPARTMENT_OFFERS_PROGRAM]->(p:Programme)
             RETURN count(*) AS n
         """).single()["n"]
 

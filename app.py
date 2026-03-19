@@ -234,18 +234,28 @@ def onboarding_screen():
         if not mapped_progs:
             faculties = ["Select Faculty", "Faculty of Science & Technology", "Faculty of Business Studies"]
         else:
-            # Extract unique faculties from the database results
             db_faculties = sorted(list(set([p['faculty'] for p in mapped_progs if p.get('faculty')])))
             faculties = ["Select Faculty"] + db_faculties
 
         faculty = st.selectbox("Faculty", faculties)
         
-        # 2. Filtered Program Selection
+        # 2. Filtered Department Selection
         if faculty == "Select Faculty":
+            departments_options = ["Select Department"]
+        else:
+            filtered_departments = sorted(list(set([p['department'] for p in mapped_progs if p.get('faculty') == faculty and p.get('department')])))
+            if not filtered_departments:
+                departments_options = ["Select Department"]
+            else:
+                departments_options = ["Select Department"] + filtered_departments
+
+        department = st.selectbox("Department", departments_options)
+        
+        # 3. Filtered Program Selection
+        if department == "Select Department":
             display_options = ["Select Program"]
         else:
-            # Filter programs that belong to the selected faculty
-            filtered = [p for p in mapped_progs if p.get('faculty') == faculty]
+            filtered = [p for p in mapped_progs if p.get('department') == department]
             if not filtered:
                 display_options = ["Select Program"]
             else:
