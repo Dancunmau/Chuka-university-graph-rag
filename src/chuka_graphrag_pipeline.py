@@ -57,23 +57,44 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("ChukaPipeline")
 
 
-@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(4))
-def _gemini_call(prompt: str, model_name="gemini-2.0-flash") -> str:
-    """Call Gemini with exponential back-off via tenacity and robust key rotation."""
+# Pre-defined tiered fallback models
+FALLBACK_MODELS = ["gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"]
+
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
+def _gemini_call(prompt: str, model_name=None) -> str:
+    """
+    Call Gemini with exponential back-off via tenacity, 
+    cascading model fallbacks, and robust key rotation.
+    """
     global current_key_idx
-    try:
-        genai.configure(api_key=GEMINI_KEYS[current_key_idx])
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        err = str(e)
-        if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
-            if len(GEMINI_KEYS) > 1:
-                current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
-                log.warning(f"Rotating to API Key #{current_key_idx + 1}")
-        log.warning(f"Gemini API Error: {err}. Retrying...")
-        raise e  # Let tenacity handle the backoff
+    
+    # Selection of models to try
+    models_to_try = [model_name] if model_name else FALLBACK_MODELS
+    
+    for m_name in models_to_try:
+        try:
+            genai.configure(api_key=GEMINI_KEYS[current_key_idx])
+            model = genai.GenerativeModel(m_name)
+            response = model.generate_content(prompt)
+            return response.text.strip()
+            
+        except Exception as e:
+            err = str(e)
+            # If hit quota (429) or service issues, try the next model in this key tier first
+            if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
+                log.warning(f"Model {m_name} failed (Quota/Issue). Attempting next model if available...")
+                continue # Try next model name
+            else:
+                # For non-quota errors, log and raise to tenacity
+                log.error(f"Critical Gemini Model Error ({m_name}): {err}")
+                raise e
+
+    # If all models in the list failed for this specific key, rotate the key and raise for retry
+    if len(GEMINI_KEYS) > 1:
+        current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
+        log.warning(f"All models failed for Key #{current_key_idx}. Rotating to API Key #{current_key_idx + 1}")
+    
+    raise Exception("All tiered models and current API key exhausted for this attempt.")
 
 
 
