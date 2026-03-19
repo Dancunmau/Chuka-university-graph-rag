@@ -540,7 +540,11 @@ def main_chat():
 
         # Output existing chat history
         for msg in st.session_state.chat_history:
-            with st.chat_message(msg["role"]):
+            if msg["role"] == "assistant":
+                avatar = "https://ui-avatars.com/api/?name=C&background=4B0082&color=fff&rounded=true"
+            else:
+                avatar = "https://ui-avatars.com/api/?name=U&background=6c757d&color=fff&rounded=true"
+            with st.chat_message(msg["role"], avatar=avatar):
                 st.markdown(msg["content"])
                 
         # Access the globally cached assistant
@@ -581,10 +585,10 @@ def main_chat():
                     
             if final_prompt:
                 st.session_state.chat_history.append({"role": "user", "content": final_prompt})
-                with st.chat_message("user"):
+                with st.chat_message("user", avatar="https://ui-avatars.com/api/?name=U&background=6c757d&color=fff&rounded=true"):
                     st.markdown(final_prompt)
 
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar="https://ui-avatars.com/api/?name=C&background=4B0082&color=fff&rounded=true"):
                 with st.spinner(""):
                     try:
                         response = assistant.generate_response(
