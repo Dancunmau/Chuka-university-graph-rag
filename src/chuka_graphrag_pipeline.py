@@ -26,16 +26,18 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from neo4j import GraphDatabase
 
-#Optional imports (degrade gracefully if missing
+# ── 1. DEPENDENCY COORDINATION ──────────────────────────────────────────
+# Gracefully degrades if heavyweight ML libraries (FAISS) are missing.
 try:
     import faiss
     from sentence_transformers import SentenceTransformer
     FAISS_AVAILABLE = True
 except ImportError:
     FAISS_AVAILABLE = False
-    logging.warning("faiss / sentence-transformers not installed — semantic search disabled.")
+    log.warning("FAISS/Sentence-Transformers missing — semantic search disabled.")
 
-#  Load environment 
+# ── 2. ENVIRONMENT & API CONFIGURATION ──────────────────────────────────
+# Supports multi-key rotation to bypass Gemini rate limits.
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 NEO4J_URI      = os.getenv("NEO4J_URI", "")
@@ -96,9 +98,8 @@ def _gemini_call(prompt: str, model_name=None) -> str:
     
     raise Exception("All tiered models and current API key exhausted for this attempt.")
 
-
-
-#  1. Intent Classification
+# ── 3. INTENT CLASSIFICATION ENGINE ─────────────────────────────────────
+# Uses Gemini to route queries between the Graph (Cypher) and Vector (FAISS) layers.
 def classify_intent(query: str) -> str:
     """
     Returns one of: 'graph_query' | 'semantic_search' | 'hybrid'
@@ -399,12 +400,15 @@ def _query_catalogue(session, query: str) -> list:
             results.append(f"    - {row['programme']}")
     return results
 
-# 3. Main Graph Retrieval Function
+# ── 5. CORE RETRIEVAL ORCHESTRATION ────────────────────────────────────
+
+# (A) Graph Retrieval (Neo4j/Cypher)
 def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> str:
     """Run Cypher queries against Neo4j by routing to specific handler functions."""
     results = []
 
     try:
+        with driver.session() as session:
             # 0. Student Academic Identity Context
             prog = entities.get("programme") or profile.get("program") or profile.get("programme")
             if prog:
@@ -475,7 +479,9 @@ def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str
         return ""
 
 
-# 5. Final Answer Synthesis 
+# ── 6. LLM SYNTHESIS & GROUNDING ───────────────────────────────────────
+
+# (C) Final Answer Synthesis 
 def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "") -> str:
     """Synthesise a grounded response using retrieved data."""
     profile_str = json.dumps(profile or {})
@@ -666,7 +672,7 @@ class GraphRAGAssistant:
         try:
             with self.driver.session() as session:
                 r = session.run("""
-                MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)-[:DEPARTMENT_OFFERS_PROGRAM]->(p:Programme)-[:HAS_UNIT]->(u)
+                MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)-[:HAS_PROGRAMME]->(p:Programme)-[:HAS_UNIT]->(u)
                 RETURN DISTINCT p.name as name, d.name as department, f.name as faculty, count(DISTINCT u) as unit_count
                 ORDER BY f.name, d.name, p.name
                 """)

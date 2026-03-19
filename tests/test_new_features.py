@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
 from src.database import get_or_create_user, log_chat_history, get_chat_history, clear_chat_history
 
-def verify_new_features():
+def test_new_features():
     print("="*60)
     print("VERIFYING PHASE 2 FUNCTIONAL FEATURES")
     print("="*60)
@@ -74,4 +74,4 @@ def verify_new_features():
     print("="*60)
 
 if __name__ == "__main__":
-    verify_new_features()
+    test_new_features()

@@ -1,3 +1,10 @@
+"""
+database.py
+===========
+The persistence layer for the Chuka University Expert System.
+Orchestrates SQLAlchemy/PostgreSQL connections for user state and chat logging.
+"""
+
 import os
 import uuid
 from datetime import datetime
@@ -7,7 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# PostgreSQL for production-ready data persistence as per the project proposal.
+# ── 1. POSTGRESQL ENGINE CONFIGURATION ──────────────────────────────────
+# Optimized for production-ready data persistence as per the project proposal.
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
     raise ValueError("DATABASE_URL must be a valid PostgreSQL connection string (starting with 'postgresql://')")
@@ -23,6 +31,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# ── 2. SCHEMA DEFINITIONS (ORMs) ──────────────────────────────────────────
 class User(Base):
     __tablename__ = "users"
     
@@ -40,6 +49,7 @@ class UserProfile(Base):
     profile_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
     faculty = Column(String(120))
+    department = Column(String(120))
     program = Column(String(200))
     year_of_study = Column(Integer)
     semester = Column(Integer)
@@ -59,17 +69,28 @@ class History(Base):
     
     user = relationship("User", back_populates="history")
 
-# Create tables
+# ── 3. AUTOMATED SCHEMA MIGRATIONS / INITIALIZATION ──────────────────────
+# Handles incremental column updates for production zero-downtime evolution.
 Base.metadata.create_all(bind=engine)
 
-# add session_id column to existing table to prevent crashing
+# Migration: Provision 'session_id' for multi-session chat tracking.
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE history ADD COLUMN session_id VARCHAR(100)"))
         conn.execute(text("CREATE INDEX ix_history_session_id ON history (session_id)"))
         conn.commit()
 except Exception:
-    pass # Column likely already exists
+    pass # Column provisioned in previous deployment.
+
+# Migration: Provision 'department' column for granular onboarding profiles.
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE user_profile ADD COLUMN department VARCHAR(120)"))
+        conn.commit()
+except Exception:
+    pass # Column provisioned in previous deployment.
+
+# ── 4. DATA ACCESS OBJECTS (DAOs) ───────────────────────────────────────
 
 def get_or_create_user(device_token=None):
     """Retrieve user by token, or create a new one. Returns a plain dict."""
@@ -95,7 +116,7 @@ def get_or_create_user(device_token=None):
     finally:
         db.close()
 
-def save_user_profile(user_id, faculty, program, year_of_study, semester):
+def save_user_profile(user_id, faculty, department, program, year_of_study, semester):
     """Save or update user's academic profile in PostgreSQL/SQLite"""
     db = SessionLocal()
     try:
@@ -105,6 +126,7 @@ def save_user_profile(user_id, faculty, program, year_of_study, semester):
             db.add(profile)
             
         profile.faculty = faculty
+        profile.department = department
         profile.program = program
         profile.year_of_study = int(year_of_study)
         profile.semester = int(semester)

@@ -1,3 +1,8 @@
+import os
+import sys
+# Add root directory to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from reportlab.pdfgen import canvas
 from src.pdf_handler import extract_text_from_pdf, parse_chuka_document
 import io

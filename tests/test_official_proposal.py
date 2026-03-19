@@ -21,7 +21,7 @@ OFFICIAL_QUERIES = [
     "Show me units for Year 3 Semester 2"
 ]
 
-def run_evaluation():
+def test_official_proposal_evaluation():
     print("="*60)
     print("CHUKA UNIVERSITY GRAPHRAG - OFFICIAL EVALUATION (APPENDIX C)")
     print("="*60)
@@ -59,4 +59,4 @@ def run_evaluation():
         print(f" Evaluation Error: {e}")
 
 if __name__ == "__main__":
-    run_evaluation()
+    test_official_proposal_evaluation()

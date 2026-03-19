@@ -1,3 +1,10 @@
+"""
+app.py
+======
+The primary high-fidelity Streamlit interface for the Chuka University GraphRAG Assistant.
+Handles real-time user interaction, document processing, and session management.
+"""
+
 import streamlit as st
 import uuid
 import io
@@ -13,13 +20,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+#  1. GLOBAL RESOURCE CACHING 
+# Prevents expensive re-initialization of LLM pipelines and FAISS indexes.
 @st.cache_resource(show_spinner=False)
 def get_assistant():
     """Global caching for the heavy GraphRAG pipelines to prevent FAISS RAM exhaustion."""
     from src.chuka_graphrag_pipeline import GraphRAGAssistant
     return GraphRAGAssistant()
 
-#  CSS 
+# ──2. PREMIUM UI STYLING (CSS) ──
+# Custom-tuned to create a modern, academic "Expert System" aesthetic.
 st.markdown("""
 <style>
 /* ── 1. Force light mode on everything except sidebar ─────── */
@@ -157,7 +167,8 @@ header[data-testid="stHeader"] {
 </style>
 """, unsafe_allow_html=True)
 
-#  1. Device Token Identity 
+# ── 3. SESSION IDENTITY & SECURITY ────────────────────
+# Every browser instance is assigned a unique device token for persistent history.
 if "device_token" not in st.session_state:
     query_params = st.query_params
     if "token" in query_params:
@@ -178,6 +189,8 @@ if "assistant" in st.session_state:
         del st.session_state["assistant"]
         st.cache_resource.clear()
 
+# ── 4. BACKEND PIPELINE INITIALIZATION ──────────────────────────────────
+# Globally cached assistant prevents duplicate LLM connector instances.
 if "assistant" not in st.session_state:
     st.session_state.assistant = load_assistant()
 
@@ -189,7 +202,7 @@ if "user_profile" not in st.session_state:
     try:
         p = db.query(UserProfile).filter(UserProfile.user_id == user["user_id"]).first()
         st.session_state.user_profile = (
-            {"faculty": p.faculty, "program": p.program,
+            {"faculty": p.faculty, "department": p.department, "program": p.program,
              "year": str(p.year_of_study), "semester": str(p.semester)}
             if p and p.faculty else None
         )
@@ -214,16 +227,17 @@ if "extra_context" not in st.session_state:
 if "uploaded_file_name" not in st.session_state:
     st.session_state.uploaded_file_name = None
 
-#  ONBOARDING SCREEN
+# ── 5. ONBOARDING & PROFILE MANAGEMENT ──────────────────────────────────
+# Captures academic identity (Faculty/Program) to ground future responses.
 def onboarding_screen():
     _, col, _ = st.columns([1, 1.2, 1])
     with col:
         st.markdown("""
         <div style="text-align:center;margin-bottom:20px;margin-top:40px;">
             <div style="display:inline-flex;align-items:center;justify-content:center;
-                        background:linear-gradient(135deg,#0b2d71,#176BFF);
+                        background:linear-gradient(135deg,#000000,#333333);
                         color:white;font-size:2em;margin-bottom:14px;"></div>
-            <h2 style="color:#0b2d71;font-weight:700;margin:0 0 4px;">Chuka University</h2>
+            <h2 style="color:#000000;font-weight:700;margin:0 0 4px;">Chuka University</h2>
             <p style="color:#64748b;font-size:0.9em;margin:0 0 28px;">Academic Assistant</p>
         </div>
         """, unsafe_allow_html=True)
@@ -268,7 +282,7 @@ def onboarding_screen():
                 st.session_state.user_profile = {
                     "faculty": faculty, "program": program, "year": year, "semester": semester
                 }
-                save_user_profile(st.session_state.user_id, faculty, program, year, semester)
+                save_user_profile(st.session_state.user_id, faculty, None, program, year, semester)
                 st.rerun()
 
     st.markdown("""
@@ -363,7 +377,8 @@ def course_explorer_view():
     except Exception as e:
         st.error(f"Could not load course data: {e}")
 
-#  MAIN APP INTERFACE
+# ── 6. MAIN CHAT & ANALYSIS INTERFACE ────────────────────────────────────
+# The primary orchestration point for the ChatGPT-style interaction layer.
 def main_chat():
     if "current_view" not in st.session_state:
         st.session_state.current_view = "chat"
@@ -461,7 +476,7 @@ def main_chat():
                     ('BACKGROUND', (0, 1), (0, -1), colors.HexColor("#f8fafc")),
                     ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('TEXTCOLOR', (0, 1), (0, -1), colors.HexColor("#0b2d71")),
+                    ('TEXTCOLOR', (0, 1), (0, -1), colors.HexColor("#000000")),
                     ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
                 ]))
                 elements.append(t)
