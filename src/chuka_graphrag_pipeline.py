@@ -384,7 +384,18 @@ def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> st
     results = []
 
     try:
-        with driver.session() as session:
+            # 0. Student Academic Identity Context
+            prog = entities.get("programme") or profile.get("program") or profile.get("programme")
+            if prog:
+                r_identity = session.run("""
+                MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)-[:DEPARTMENT_OFFERS_PROGRAM]->(p:Programme)
+                WHERE p.name = $prog
+                RETURN f.name AS faculty, d.name AS department
+                """, prog=prog)
+                id_row = r_identity.single()
+                if id_row:
+                    results.append(f"Student Academic Identity - Programme: {prog} | Department: {id_row['department']} | Faculty: {id_row['faculty']}")
+
             # (A) Past papers
             results.extend(_query_past_papers(session, query, entities))
             
