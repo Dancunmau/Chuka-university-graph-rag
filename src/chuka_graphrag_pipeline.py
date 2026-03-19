@@ -58,7 +58,7 @@ log = logging.getLogger("ChukaPipeline")
 
 
 # Pre-defined tiered fallback models
-FALLBACK_MODELS = ["gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"]
+FALLBACK_MODELS = ["gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 
 @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
 def _gemini_call(prompt: str, model_name=None) -> str:
