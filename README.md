@@ -50,8 +50,7 @@ pip install -r requirements.txt
 
 ### 2. Database Setup
 - Ensure a **Neo4j AuraDB** (or local) instance is running.
-- For production-style persistence, configure a **PostgreSQL** instance for chat history and profiles.
-- If `DATABASE_URL` is not set, the app now falls back to a local SQLite database so Streamlit can still boot for demos or quick tests.
+- Ensure a **PostgreSQL** instance is available for chat history persistence.
 - Configure your `.env` file with the following keys:
   ```env
   GEMINI_API_KEY=your_gemini_key
@@ -60,8 +59,6 @@ pip install -r requirements.txt
   NEO4J_PASSWORD=your_password
   DATABASE_URL=postgresql://...
   ```
-
-For Streamlit Cloud, add `DATABASE_URL` under your app secrets if you want persistent multi-user chat history across restarts.
 
 ### 3. Data Ingestion
 Map the latest university timetable to the Knowledge Graph:

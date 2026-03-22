@@ -1,107 +1,29 @@
 """Persistence layer for the Chuka University GraphRAG Assistant.
-Orchestrates SQLAlchemy-backed connections for user state and chat history.
+Orchestrates SQLAlchemy/PostgreSQL connections for user state and chat history.
 """
 
-import logging
 import os
 import uuid
 from datetime import datetime
-from pathlib import Path
-
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine, text
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
-
-try:
-    import streamlit as st
-except Exception:  # pragma: no cover - streamlit may be unavailable in some test contexts.
-    st = None
 
 load_dotenv()
 
-log = logging.getLogger(__name__)
 
-
-def _get_streamlit_secret(key):
-    """Safely read a Streamlit secret when running inside Streamlit Cloud."""
-    if st is None:
-        return None
-
-    try:
-        return st.secrets.get(key)
-    except Exception:
-        return None
-
-
-def _normalize_database_url(raw_url):
-    """Normalize provider-specific database URL variants."""
-    if not raw_url:
-        return None
-
-    normalized = raw_url.strip()
-    if normalized.startswith("postgres://"):
-        return "postgresql://" + normalized[len("postgres://") :]
-    return normalized
-
-
-def _default_sqlite_url():
-    """Return a local SQLite path used when Postgres is not configured."""
-    db_dir = Path(__file__).resolve().parent.parent / "data"
-    db_dir.mkdir(parents=True, exist_ok=True)
-    db_path = db_dir / "chuka_graphrag.db"
-    return f"sqlite:///{db_path.as_posix()}"
-
-
-def _resolve_database_url():
-    """Pick the best available database URL for the current runtime."""
-    raw_url = os.getenv("DATABASE_URL") or _get_streamlit_secret("DATABASE_URL")
-    database_url = _normalize_database_url(raw_url)
-
-    if database_url and database_url.startswith("postgresql"):
-        return database_url, "postgresql", False
-
-    if database_url and database_url.startswith("sqlite"):
-        return database_url, "sqlite", False
-
-    fallback_url = _default_sqlite_url()
-    if database_url:
-        log.warning(
-            "Unsupported DATABASE_URL scheme '%s'. Falling back to SQLite at %s.",
-            database_url.split(":", 1)[0],
-            fallback_url,
-        )
-    else:
-        log.warning(
-            "DATABASE_URL is not configured. Falling back to SQLite at %s.",
-            fallback_url,
-        )
-    return fallback_url, "sqlite", True
-
-
-# Database configuration
-DATABASE_URL, DATABASE_BACKEND, USING_FALLBACK_DATABASE = _resolve_database_url()
-DATABASE_STATUS_MESSAGE = (
-    "Using local SQLite fallback because DATABASE_URL is missing or unsupported. "
-    "Chat history and profiles may reset when the app restarts."
-    if USING_FALLBACK_DATABASE
-    else f"Using configured {DATABASE_BACKEND} database backend."
-)
-
-engine_kwargs = {"echo": False}
-if DATABASE_BACKEND == "postgresql":
-    engine_kwargs.update(
-        pool_pre_ping=True,
-        pool_size=20,
-        max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=1800,
-    )
-else:
-    engine_kwargs.update(connect_args={"check_same_thread": False})
+# PostgreSQL  Configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
+    raise ValueError("DATABASE_URL must be a valid PostgreSQL connection string (starting with 'postgresql://')")
 
 engine = create_engine(
-    DATABASE_URL,
-    **engine_kwargs,
+    DATABASE_URL, 
+    echo=False,
+    pool_size=20,          # Standard number of persistent connections to keep open
+    max_overflow=10,       # Allow bursting up to 30 connections during spikes
+    pool_timeout=30,       # Wait max 30 seconds to get a connection before throwing timeout
+    pool_recycle=1800      # Recycle connections every 30 minutes to drop dead/stale DB sockets
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

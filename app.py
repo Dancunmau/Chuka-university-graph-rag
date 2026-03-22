@@ -8,18 +8,7 @@ import uuid
 import io
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
-from src.database import (
-    DATABASE_STATUS_MESSAGE,
-    USING_FALLBACK_DATABASE,
-    SessionLocal,
-    UserProfile,
-    clear_chat_history,
-    get_chat_history,
-    get_or_create_user,
-    get_user_sessions,
-    log_chat_history,
-    save_user_profile,
-)
+from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, get_user_sessions, SessionLocal, UserProfile
 from src.pdf_handler import parse_chuka_document
 
 st.set_page_config(
@@ -427,9 +416,6 @@ def main_chat():
             st.session_state.chat_history = []
             st.session_state.current_view = "chat"
             st.rerun()
-
-        if USING_FALLBACK_DATABASE:
-            st.warning(DATABASE_STATUS_MESSAGE)
             
         if st.button("Course Explorer", use_container_width=True, key="open_explorer"):
             st.session_state.current_view = "explorer"
