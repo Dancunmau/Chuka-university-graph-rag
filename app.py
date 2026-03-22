@@ -36,6 +36,20 @@ def get_assistant():
     from src.chuka_graphrag_pipeline import GraphRAGAssistant
     return GraphRAGAssistant()
 
+
+def initialize_assistant_state():
+    """Initialise the assistant once and keep startup errors visible in the UI."""
+    if "assistant_ready" not in st.session_state:
+        st.session_state.assistant_ready = False
+        st.session_state.assistant_error = None
+        st.session_state.assistant = None
+
+        try:
+            st.session_state.assistant = get_assistant()
+            st.session_state.assistant_ready = True
+        except Exception as exc:
+            st.session_state.assistant_error = str(exc)
+
 # UI Styling
 st.markdown("""
 <style>
@@ -210,17 +224,19 @@ user = get_or_create_user(device_token=st.session_state.device_token)
 st.session_state.user_id = user["user_id"]
 
 if "assistant" in st.session_state:
-    if not hasattr(st.session_state.assistant, "get_personalized_timetable"):
+    if st.session_state.assistant is not None and not hasattr(st.session_state.assistant, "get_personalized_timetable"):
         del st.session_state["assistant"]
         st.cache_resource.clear()
 
 
 # State Initialization
-if "assistant" not in st.session_state:
-    st.session_state.assistant = get_assistant()
+initialize_assistant_state()
 
 if "mapped_programmes" not in st.session_state:
-    st.session_state.mapped_programmes = st.session_state.assistant.get_mapped_programmes()
+    if not st.session_state.assistant_ready:
+        st.session_state.mapped_programmes = []
+    else:
+        st.session_state.mapped_programmes = st.session_state.assistant.get_mapped_programmes()
 
 if "user_profile" not in st.session_state:
     db = SessionLocal()
@@ -257,6 +273,14 @@ def onboarding_screen():
     """Initial screening to capture academic context used to filter Cypher queries."""
     _, col, _ = st.columns([1, 2.5, 1])
     with col:
+        if not st.session_state.assistant_ready:
+            st.error(
+                "The AI assistant is not configured for this deployment yet. "
+                "Add `GEMINI_API_KEY`, `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD` in Streamlit secrets."
+            )
+            if st.session_state.assistant_error:
+                st.caption(f"Startup detail: {st.session_state.assistant_error}")
+
         st.markdown("""
         <div style="text-align:center;margin-bottom:20px;margin-top:40px;">
             <div style="display:inline-flex;align-items:center;justify-content:center;
@@ -410,6 +434,15 @@ def course_explorer_view():
 def main_chat():
     if "current_view" not in st.session_state:
         st.session_state.current_view = "chat"
+
+    if not st.session_state.assistant_ready:
+        st.error(
+            "The AI assistant is not configured for this deployment yet. "
+            "Add `GEMINI_API_KEY` and the Neo4j credentials in Streamlit secrets."
+        )
+        if st.session_state.assistant_error:
+            st.caption(f"Startup detail: {st.session_state.assistant_error}")
+        return
 
     # Pre-fetch data to avoid sidebar blocking
     tt_data = []

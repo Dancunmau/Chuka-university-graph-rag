@@ -61,7 +61,13 @@ pip install -r requirements.txt
   DATABASE_URL=postgresql://...
   ```
 
-For Streamlit Cloud, add `DATABASE_URL` under your app secrets if you want persistent multi-user chat history across restarts.
+For Streamlit Cloud, add these under your app secrets:
+
+- `GEMINI_API_KEY`
+- `NEO4J_URI`
+- `NEO4J_USERNAME`
+- `NEO4J_PASSWORD`
+- `DATABASE_URL` if you want persistent multi-user chat history across restarts
 
 ### 3. Data Ingestion
 Map the latest university timetable to the Knowledge Graph:
