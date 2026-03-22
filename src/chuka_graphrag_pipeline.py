@@ -85,20 +85,6 @@ FAISS_INDEX_PATH    = os.path.join(os.path.dirname(__file__), "..", "data", "fai
 FAISS_METADATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_metadata.pkl")
 
 
-def get_missing_runtime_config() -> list[str]:
-    """Return the required runtime settings that are still missing."""
-    missing = []
-    if not GEMINI_KEYS:
-        missing.append("GEMINI_API_KEY")
-    if not NEO4J_URI:
-        missing.append("NEO4J_URI")
-    if not NEO4J_USERNAME:
-        missing.append("NEO4J_USERNAME")
-    if not NEO4J_PASSWORD:
-        missing.append("NEO4J_PASSWORD")
-    return missing
-
-
 # Thread lock for thread-safe API key rotation
 key_lock = threading.Lock()
 

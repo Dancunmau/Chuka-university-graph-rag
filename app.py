@@ -7,6 +7,7 @@ import streamlit as st
 import uuid
 import io
 import pandas as pd
+from src.chuka_graphrag_pipeline import GraphRAGAssistant
 from src.database import (
     DATABASE_STATUS_MESSAGE,
     USING_FALLBACK_DATABASE,
@@ -31,35 +32,23 @@ st.set_page_config(
 # Global Resource Initialization
 @st.cache_resource(show_spinner=False)
 def get_assistant():
-    """Cache assistant startup results without letting initialization exceptions crash the app."""
+    """Caches the GraphRAG pipeline globally to share the Neo4j connection pool and FAISS index in memory across user sessions."""
     from src.chuka_graphrag_pipeline import GraphRAGAssistant
-
-    try:
-        return GraphRAGAssistant(), None
-    except Exception as exc:
-        return None, str(exc)
+    return GraphRAGAssistant()
 
 
 def initialize_assistant_state():
     """Initialise the assistant once and keep startup errors visible in the UI."""
     if "assistant_ready" not in st.session_state:
-        from src.chuka_graphrag_pipeline import get_missing_runtime_config
-
         st.session_state.assistant_ready = False
         st.session_state.assistant_error = None
         st.session_state.assistant = None
 
-        missing_config = get_missing_runtime_config()
-        if missing_config:
-            st.session_state.assistant_error = (
-                "Missing required configuration: " + ", ".join(missing_config)
-            )
-            return
-
-        assistant, error = get_assistant()
-        st.session_state.assistant = assistant
-        st.session_state.assistant_error = error
-        st.session_state.assistant_ready = assistant is not None and error is None
+        try:
+            st.session_state.assistant = get_assistant()
+            st.session_state.assistant_ready = True
+        except Exception as exc:
+            st.session_state.assistant_error = str(exc)
 
 # UI Styling
 st.markdown("""
