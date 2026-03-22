@@ -26,11 +26,6 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from neo4j import GraphDatabase
 
-try:
-    import streamlit as st
-except Exception:  # pragma: no cover - streamlit may be unavailable in some test contexts.
-    st = None
-
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("ChukaPipeline")
 
@@ -46,39 +41,15 @@ except ImportError:
 # API Configuration
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-
-def _get_streamlit_secret(key: str) -> str:
-    """Safely read a Streamlit secret when available."""
-    if st is None:
-        return ""
-
-    try:
-        return st.secrets.get(key, "")
-    except Exception:
-        return ""
-
-
-def _get_config_value(key: str, default: str = "") -> str:
-    """Resolve config from environment first, then Streamlit secrets."""
-    value = os.getenv(key) or _get_streamlit_secret(key)
-    return value or default
-
-
-def _load_gemini_keys() -> list[str]:
-    """Load available Gemini API keys from env or Streamlit secrets."""
-    keys = [
-        _get_config_value("GEMINI_API_KEY", ""),
-        _get_config_value("GEMINI_API_KEY2", ""),
-        _get_config_value("GEMINI_API_KEY3", ""),
-    ]
-    return [k for k in keys if k]
-
-
-NEO4J_URI = _get_config_value("NEO4J_URI", "")
-NEO4J_USERNAME = _get_config_value("NEO4J_USERNAME", "")
-NEO4J_PASSWORD = _get_config_value("NEO4J_PASSWORD", "")
-GEMINI_KEYS = _load_gemini_keys()
-GEMINI_API_KEY = GEMINI_KEYS[0] if GEMINI_KEYS else ""
+NEO4J_URI      = os.getenv("NEO4J_URI", "")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_KEYS = [
+    os.getenv("GEMINI_API_KEY", ""),
+    os.getenv("GEMINI_API_KEY2", ""),
+    os.getenv("GEMINI_API_KEY3", "")
+]
 GEMINI_KEYS = [k for k in GEMINI_KEYS if k] # Filter out empty keys
 current_key_idx = 0
 FAISS_INDEX_PATH    = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index.bin")
@@ -591,11 +562,11 @@ class GraphRAGAssistant:
 
     def __init__(self):
         if not GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not configured. Set it in .env or Streamlit secrets.")
+            raise ValueError("GEMINI_API_KEY not set in .env")
         genai.configure(api_key=GEMINI_API_KEY)
 
         if not NEO4J_URI:
-            raise ValueError("NEO4J_URI is not configured. Set it in .env or Streamlit secrets.")
+            raise ValueError("NEO4J_URI not set in .env")
         self.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
 
         # FAISS 
