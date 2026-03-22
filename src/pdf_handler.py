@@ -1,8 +1,6 @@
 """
-pdf_handler.py
-==============
-Specialized document parsing utility for Chuka University academic PDFs.
-Supports intelligent extraction of Timetables and Fee Statements.
+Document parsing utility for academic PDFs.
+Extracts raw text from Timetables and Fee Statements.
 """
 
 import pdfplumber
@@ -10,10 +8,9 @@ import PyPDF2
 import io
 import logging
 
-# Set up logging for document processing events
 log = logging.getLogger("PDFHandler")
 
-# ── 1. RAW TEXT EXTRACTION ENGINE ──────────────────────────────────────
+# Raw Text Extraction
 def extract_text_from_pdf(file_bytes):
     """Extracts raw text from a PDF file."""
     text = ""
@@ -35,7 +32,7 @@ def extract_text_from_pdf(file_bytes):
     
     return text.strip()
 
-# ── 2. ACADEMIC DOCUMENT CLASSIFICATION ────────────────────────────────
+# Document Classification & Parsing
 def parse_chuka_document(file_name, file_bytes):
     """
     Parses a Chuka University document (Timetable or Fee Statement).

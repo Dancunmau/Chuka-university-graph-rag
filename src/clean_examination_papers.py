@@ -1,13 +1,10 @@
 """
-Data Cleaning Guide for Chuka Exam Papers Metadata
-====================================================
-
 This script will help you clean the chuka_exam_papers_metadata.csv file.
 
 Current state:
 - Total rows: 26,942
 - Unique papers: 20,042
-- Issues: Duplicates, possibly empty course codes, inconsistent dates
+- Issues: Duplicates, empty course codes, inconsistent dates
 """
 
 import pandas as pd
@@ -15,15 +12,14 @@ import numpy as np
 
 # Load the data
 print("Loading data...")
-df = pd.read_csv('d:/Jupyter notebook/chuka_exam_papers_metadata.csv')
+df = pd.read_csv(r'd:/Jupyter notebook/Graph rag/data/chuka_exam_papers_metadata.csv')
 print(f"Initial rows: {len(df)}")
 print(f"\nColumns: {df.columns.tolist()}")
 print(f"\nFirst few rows:")
 print(df.head())
 
-# ============================================
+
 # STEP 1: Remove Duplicates
-# ============================================
 print("\n" + "="*50)
 print("STEP 1: Removing Duplicates")
 print("="*50)
@@ -35,9 +31,8 @@ df_clean = df.drop_duplicates(subset=['repository_link'], keep='first')
 print(f"After removing duplicate links: {len(df_clean)} rows")
 print(f"Removed: {len(df) - len(df_clean)} duplicate rows")
 
-# ============================================
+
 # STEP 2: Handle Missing/Empty Values
-# ============================================
 print("\n" + "="*50)
 print("STEP 2: Checking Missing Values")
 print("="*50)
@@ -51,9 +46,7 @@ for col in df_clean.columns:
     if empty_count > 0:
         print(f"{col}: {empty_count} empty strings")
 
-# ============================================
 # STEP 3: Clean Course Codes
-# ============================================
 print("\n" + "="*50)
 print("STEP 3: Analyzing Course Codes")
 print("="*50)
@@ -79,9 +72,7 @@ print("\nUncomment the line below for your choice:")
 
 # df_clean = df_clean[has_code]  # Uncomment for Option B
 
-# ============================================
 # STEP 4: Clean Year Column
-# ============================================
 print("\n" + "="*50)
 print("STEP 4: Analyzing Year Data")
 print("="*50)
@@ -93,9 +84,8 @@ print(df_clean['year'].value_counts().head(20))
 print("\nYear data types and samples:")
 print(df_clean['year'].describe())
 
-# ============================================
+
 # STEP 5: Clean Title Column
-# ============================================
 print("\n" + "="*50)
 print("STEP 5: Analyzing Titles")
 print("="*50)
@@ -112,9 +102,7 @@ print(df_clean[df_clean['title_length'] < 10][['title', 'course_code']].head())
 print("\nVery long titles (> 200 chars):")
 print(df_clean[df_clean['title_length'] > 200][['title', 'course_code']].head())
 
-# ============================================
 # STEP 6: Sort and Organize
-# ============================================
 print("\n" + "="*50)
 print("STEP 6: Sorting Data")
 print("="*50)
@@ -123,9 +111,7 @@ print("="*50)
 df_clean = df_clean.sort_values(['course_code', 'year'], ascending=[True, False])
 print("Data sorted by course_code and year (descending)")
 
-# ============================================
 # STEP 7: Save Cleaned Data
-# ============================================
 print("\n" + "="*50)
 print("STEP 7: Saving Cleaned Data")
 print("="*50)
@@ -134,14 +120,12 @@ print("="*50)
 df_clean = df_clean.drop(columns=['title_length'], errors='ignore')
 
 # Save to new file
-output_file = 'd:/Jupyter notebook/chuka_exam_papers_CLEANED.csv'
+output_file = r'd:/Jupyter notebook/Graph rag/data/chuka_exam_papers_CLEANED.csv'
 df_clean.to_csv(output_file, index=False)
 print(f"\nCleaned data saved to: {output_file}")
 print(f"Final row count: {len(df_clean)}")
 
-# ============================================
 # STEP 8: Summary Statistics
-# ============================================
 print("\n" + "="*50)
 print("FINAL SUMMARY")
 print("="*50)

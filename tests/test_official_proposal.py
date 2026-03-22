@@ -1,4 +1,3 @@
-# Official Proposal Evaluation Test
 import sys
 import os
 import json
@@ -21,6 +20,9 @@ OFFICIAL_QUERIES = [
     "Show me units for Year 3 Semester 2"
 ]
 
+import pytest
+
+@pytest.mark.integration
 def test_official_proposal_evaluation():
     print("="*60)
     print("CHUKA UNIVERSITY GRAPHRAG - OFFICIAL EVALUATION (APPENDIX C)")
@@ -56,7 +58,7 @@ def test_official_proposal_evaluation():
         
         assistant.close()
     except Exception as e:
-        print(f" Evaluation Error: {e}")
+        print(f"Evaluation Error: {e}")
 
 if __name__ == "__main__":
     test_official_proposal_evaluation()

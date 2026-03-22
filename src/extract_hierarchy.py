@@ -1,3 +1,6 @@
+"""Extracts the academic hierarchy from raw PDF text using Gemini. Outputs a structured CSV mapping.
+"""
+
 import json
 import os
 import re
@@ -11,7 +14,9 @@ if not API_KEY:
     raise ValueError("GEMINI_API_KEY missing")
 
 genai.configure(api_key=API_KEY)
-# Use a JSON-structured prompt to ensure stable output
+
+# Enforcing application/json MIME type at the API level guarantees the LLM 
+# returns valid JSON, bypassing the need for complex string parsing/regex.
 model = genai.GenerativeModel('gemini-2.5-flash', generation_config={"response_mime_type": "application/json"})
 
 def extract_hierarchy():

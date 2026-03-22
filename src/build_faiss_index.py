@@ -1,10 +1,9 @@
 """
-build_faiss_index.py
-Overhauled to use pdfplumber for high-quality extraction and semantic chunking.
+Overhauled to use pdfplumber for extraction and semantic chunking.
 Targets:
-  - Student Handbook (Rules, Regulations)
-  - CU Advert (Programmes, Fees)
-  - Timetable (Schedule)
+  - Student Handbook 
+  - CU Advert 
+  - Timetable 
 """
 import os, pickle, re, json
 import numpy as np
@@ -16,16 +15,16 @@ try:
     import pdfplumber
     from sentence_transformers import SentenceTransformer
 except ImportError:
-    print("Installing missing dependencies...")
+    print("Installing missing dependencies")
     os.system("pip install sentence-transformers faiss-cpu pdfplumber tqdm -q")
     import faiss
     import pdfplumber
     from sentence_transformers import SentenceTransformer
 
 BASE = 'd:/Jupyter notebook/Graph rag'
-HANDBOOK_PATH = f'{BASE}/Student-handbook-August-2024.docx.pdf'
-ADVERT_PATH    = f'{BASE}/CU-Advert-Jan-2024.pdf'
-TIMETABLE_PDF  = f'{BASE}/1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf'
+HANDBOOK_PATH = f'{BASE}/reports/Student-handbook-August-2024.docx.pdf'
+ADVERT_PATH    = f'{BASE}/reports/CU-Advert-Jan-2024.pdf'
+TIMETABLE_PDF  = f'{BASE}/reports/1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf'
 
 FAISS_INDEX_PATH = f'{BASE}/faiss_index.bin'
 METADATA_PATH    = f'{BASE}/faiss_metadata.pkl'
@@ -36,17 +35,14 @@ def clean_text(text):
     return text.strip()
 
 def is_toc_page(text: str) -> bool:
-    """
-    Detect Table of Contents pages to skip them from semantic indexing.
-    TOC pages are characterised by many lines with dot-leaders (.....) and page numbers.
-    """
+    """Detect Table of Contents pages to skip them from semantic indexing."""
     if not text:
         return False
     lines = text.split('\n')
     dot_leader_lines = sum(
         1 for line in lines
-        if re.search(r'\.{4,}\s*\d+\s*$', line)       # e.g. "Accommodation .......... 52"
-        or re.search(r'\s{5,}\d{1,3}\s*$', line.rstrip())  # trailing spaced page number
+        if re.search(r'\.{4,}\s*\d+\s*$', line)                
+        or re.search(r'\s{5,}\d{1,3}\s*$', line.rstrip())  
     )
     # If >30% of lines look like TOC entries, treat as TOC page
     return len(lines) > 3 and (dot_leader_lines / len(lines)) > 0.30
@@ -116,7 +112,7 @@ def process_handbook():
             text = page.extract_text()
             if not text: continue
 
-            # Skip Table of Contents pages — they create noise in retrieval
+            # Skip Table of Contents pages 
             if is_toc_page(text):
                 print(f"Skipping TOC page {page.page_number}")
                 continue
@@ -135,7 +131,7 @@ def process_handbook():
 def process_advert():
     print(f"Processing Advert: {ADVERT_PATH}")
     all_chunks = []
-    chunker = SemanticChunker(chunk_size=1200) # Slightly larger for tables
+    chunker = SemanticChunker(chunk_size=1200) 
     with pdfplumber.open(ADVERT_PATH) as pdf:
         current_level = "Academic Programmes"
         for page in tqdm(pdf.pages, desc="Advert Pages"):
@@ -171,7 +167,7 @@ def process_timetable():
     if not os.path.exists(TIMETABLE_PDF):
         return []
     
-    chunker = SemanticChunker(chunk_size=1500) # Timetables are dense
+    chunker = SemanticChunker(chunk_size=1500) 
     with pdfplumber.open(TIMETABLE_PDF) as pdf:
         current_day = "Schedule"
         for page in tqdm(pdf.pages, desc="Timetable Pages"):
@@ -208,11 +204,10 @@ def build_index():
     all_chunks.extend(process_timetable())
     
     # 2. Add existing repository items if the index exists
-    # If we want to keep communities, we should load the existing metadata
     if os.path.exists(METADATA_PATH):
         with open(METADATA_PATH, 'rb') as f:
             old_metadata = pickle.load(f)
-        # Filter out old PDF chunks (they might have different source names)
+        # Filter out old PDF chunks
         repo_chunks = [c for c in old_metadata if c['source'].startswith('Repository:')]
         print(f"Keeping {len(repo_chunks)} repository items from existing index.")
         all_chunks.extend(repo_chunks)
@@ -220,11 +215,11 @@ def build_index():
     print(f"Total chunks to index: {len(all_chunks)}")
 
     # 3. Embed
-    print("Loading sentence-transformers model...")
+    print("Loading sentence-transformers model")
     embedder = SentenceTransformer("all-mpnet-base-v2")
     texts = [c['text'] for c in all_chunks]
 
-    print("Generating embeddings...")
+    print("Generating embeddings")
     vecs = embedder.encode(texts, batch_size=32, show_progress_bar=True).astype(np.float32)
 
     # Normalize

@@ -8,6 +8,9 @@ from src.pdf_handler import extract_text_from_pdf, parse_chuka_document
 import io
 import os
 
+import pytest
+
+@pytest.mark.unit
 def test_pdf_parsing():
     # 1. Create a dummy PDF in memory
     buf = io.BytesIO()

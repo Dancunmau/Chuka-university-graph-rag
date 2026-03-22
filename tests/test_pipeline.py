@@ -12,6 +12,9 @@ except ImportError as e:
     print(f" Import failed: {e}")
     sys.exit(1)
 
+import pytest
+
+@pytest.mark.integration
 def test_initialization():
     try:
         assistant = GraphRAGAssistant()

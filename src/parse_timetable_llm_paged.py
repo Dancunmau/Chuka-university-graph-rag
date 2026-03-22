@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 
 # 1. Configuration
 load_dotenv('d:/Jupyter notebook/Graph rag/.env')
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") # Use primary API key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 genai.configure(api_key=GEMINI_API_KEY)
 
-PDF_PATH = "d:/Jupyter notebook/Graph rag/1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf"
-OUTPUT_CSV = "d:/Jupyter notebook/Graph rag/timetable_new.csv"
+PDF_PATH = r'd:/Jupyter notebook/Graph rag/reports/1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf'
+OUTPUT_CSV = r'd:/Jupyter notebook/Graph rag/data/timetable.csv'
 
 def upload_to_gemini(path, mime_type=None):
     """Uploads the given file to Gemini."""
@@ -61,7 +61,7 @@ def extract_timetable_data():
         generation_config={"response_mime_type": "application/json"}
     )
 
-    print("Requesting extraction from Gemini (full PDF)...")
+    print("Requesting extraction from Gemini (full PDF)")
     try:
         response = model.generate_content([pdf_file, prompt])
         results = json.loads(response.text)
@@ -69,7 +69,7 @@ def extract_timetable_data():
         # 4. Save to CSV
         df = pd.DataFrame(results)
         df.to_csv(OUTPUT_CSV, index=False)
-        print(f"Extraction successful! Saved {len(df)} records to {OUTPUT_CSV}")
+        print(f"Extraction successful Saved {len(df)} records to {OUTPUT_CSV}")
         
     except Exception as e:
         print(f"Error during extraction: {e}")

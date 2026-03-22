@@ -1,9 +1,14 @@
+"""
+Extracts program data from the official Chuka University PDF advert,
+handling complex tabular layouts and varied hierarchical structures.
+"""
+
 import pdfplumber
 import csv
 import re
 
-pdf_path = r'D:\OS DESIGN\CU-Advert-October-2024-F.pdf'
-output_csv = r'd:\Jupyter notebook\Graph rag\programs.csv'
+pdf_path = r'd:\Jupyter notebook\Graph rag\reports\CU-Advert-Jan-2024.pdf'
+output_csv = r'd:\Jupyter notebook\Graph rag\data\programs.csv'
 
 def clean_text(text):
     if not text: return ""
@@ -15,8 +20,7 @@ def extract_programs(pdf_path, output_path):
     programs = []
     current_level = "Bachelors"
     current_faculty = ""
-    
-    # Levels and keywords
+
     levels = {
         "POSTGRADUATE DIPLOMA": "Postgraduate Diploma",
         "POST-GRADUATE DIPLOMA": "Postgraduate Diploma",
@@ -46,12 +50,10 @@ def extract_programs(pdf_path, output_path):
                     if not any(row): continue
                     row_text = " ".join([str(c) for c in row if c]).upper()
                     
-                    # Faculty Header
                     if "FACULTY OF" in row_text or "SCHOOL OF" in row_text:
                         current_faculty = clean_text(row[0]) if row[0] else current_faculty
                         continue
                     
-                    # Level Header detection
                     if "DIPLOMA PROGRAMMES" in row_text: current_level = "Diploma"
                     elif "CERTIFICATE PROGRAMMES" in row_text: current_level = "Certificate"
                     elif "BACHELORS DEGREE" in row_text: current_level = "Bachelors"
@@ -59,7 +61,6 @@ def extract_programs(pdf_path, output_path):
                     elif "PHD DEGREE" in row_text: current_level = "Doctorate"
                     elif "POSTGRADUATE" in row_text: current_level = "Postgraduate Diploma"
 
-                    # Check for lists in PhD/Masters (Special layout)
                     is_list = any(re.search(r'\d+[\.\)]\s', str(c)) for c in row if c)
                     if is_list and current_level in ["Masters", "Doctorate"]:
                         pot = []
@@ -79,16 +80,13 @@ def extract_programs(pdf_path, output_path):
                             programs.append({"name": n, "level": current_level, "duration": r_dur, "fee": r_fee, "faculty": current_faculty})
                         continue
 
-                    # Standard Row
                     n_col = str(row[0]) if row[0] else ""
                     if n_col:
-                        # Detect level change within name
                         for k, v in levels.items():
                             if k in n_col.upper():
                                 current_level = v
                                 break
                         
-                        # Gather metadata
                         dur = ""
                         fee = ""
                         for c in row[1:]:
@@ -103,7 +101,6 @@ def extract_programs(pdf_path, output_path):
                         if len(n_col) > 10 and not "PROGRAMME" in n_col.upper():
                             programs.append({"name": clean_text(n_col), "level": current_level, "duration": dur if dur else last_dur, "fee": fee if fee else last_fee, "faculty": current_faculty})
 
-    # Deduplicate and Filter noise
     unique = []
     seen = set()
     for p in programs:

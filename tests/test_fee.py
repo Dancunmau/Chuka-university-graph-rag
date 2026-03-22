@@ -5,6 +5,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
 
+import pytest
+
+@pytest.mark.integration
 def test_fee_calculation():
     assistant = GraphRAGAssistant()
     profile = {

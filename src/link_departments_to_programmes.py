@@ -1,23 +1,22 @@
 """
-link_departments_to_programmes.py
-===================================
+
 Bridges the two halves of the Neo4j graph by linking the existing
 Faculty/Department nodes to the 24 Programme nodes that have HAS_UNIT data.
 
 Source of truth: programs.csv (columns: name, faculty, department)
 
 Strategy:
-  1. Load programmes from programs.csv -> build {name: (faculty, dept)} lookup
+  1. Load programmes from programs.csv-> build {name: (faculty, dept)} lookup
   2. Fetch all Programme nodes from Neo4j (the 24 with HAS_UNIT)
   3. Fuzzy-match each Programme node name to a row in the CSV
   4. For each match, create:
        Department -[:HAS_PROGRAMME]-> Programme
-       (The Faculty -> Department link already exists for the Department)
+       (The Faculty > Department link already exists for the Department)
   5. Print a match report and ask for confirmation before writing
 
 Result after running:
-  Faculty ->[:FACULTY_HAS_DEPARTMENT]-> Department ->[:DEPARTMENT_OFFERS_PROGRAM]-> Program (252)
-                                                   ->[:HAS_PROGRAMME]-> Programme(24) ->[:HAS_UNIT]-> ...
+  Faculty >[:FACULTY_HAS_DEPARTMENT]> Department >[:DEPARTMENT_OFFERS_PROGRAM]-> Program (252)
+                                                   >[:HAS_PROGRAMME]-> Programme(24) >[:HAS_UNIT]>
 """
 
 import os
@@ -44,7 +43,7 @@ def similarity(a: str, b: str) -> float:
 
 
 def main():
-    # ── 1. Load CSVs and merge in-memory to bypass file locks ────────
+    # Load CSVs and merge in-memory to bypass file locks
     print("Loading data from programs_final_linked.csv...")
     try:
         import shutil
@@ -66,7 +65,7 @@ def main():
         fac = str(row['faculty']).strip()
         dept = str(row.get('department', '')).strip()
         
-        # Merge department from programs_new.csv if missing
+        # Merge department if missing
         if prog_name.lower() in lookup_dept:
             dept = lookup_dept[prog_name.lower()]
         if not dept:
@@ -79,7 +78,7 @@ def main():
 
     print(f"Loaded {len(csv_lookup)} programmes for matching.")
 
-    # ── 2. Fetch Programme nodes from Neo4j ────────────────────────────
+    # Fetch Programme nodes from Neo4j
     print("Fetching Programme nodes from Neo4j...")
     with driver.session() as s:
         programme_rows = s.run("MATCH (p:Programme) RETURN p.name AS name").data()
@@ -89,7 +88,7 @@ def main():
     for p in programmes:
         print(f"  • {p}")
 
-    # ── 3. Fuzzy-match each Programme to a CSV row ─────────────────────
+    # Fuzzy-match each Programme to a CSV row
     print(f"\n{DIVIDER}")
     print("MATCHING Programme nodes to programs.csv...")
     print(DIVIDER)

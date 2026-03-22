@@ -53,7 +53,7 @@ pip install -r requirements.txt
 - Ensure a **PostgreSQL** instance is available for chat history persistence.
 - Configure your `.env` file with the following keys:
   ```env
-  GOOGLE_API_KEY=your_gemini_key
+  GEMINI_API_KEY=your_gemini_key
   NEO4J_URI=bolt://...
   NEO4J_USERNAME=neo4j
   NEO4J_PASSWORD=your_password

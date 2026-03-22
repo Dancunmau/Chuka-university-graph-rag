@@ -1,4 +1,4 @@
-# New Features Verification Test (Refined)
+# New Features Verification Test 
 import sys
 import os
 import json
@@ -9,6 +9,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
 from src.database import get_or_create_user, log_chat_history, get_chat_history, clear_chat_history
 
+import pytest
+
+@pytest.mark.integration
 def test_new_features():
     print("="*60)
     print("VERIFYING PHASE 2 FUNCTIONAL FEATURES")
@@ -46,9 +49,10 @@ def test_new_features():
     token = "test_token_" + os.urandom(4).hex()
     user = get_or_create_user(token)
     user_id = user["user_id"]
-    log_chat_history(user_id, "Test Query", "Test Response")
+    session_id = "test_sess_" + os.urandom(4).hex()
+    log_chat_history(user_id, session_id, "Test Query", "Test Response")
     
-    history_before = get_chat_history(user_id)
+    history_before = get_chat_history(user_id, session_id=session_id)
     print(f"History count before: {len(history_before)}")
     
     clear_chat_history(user_id)

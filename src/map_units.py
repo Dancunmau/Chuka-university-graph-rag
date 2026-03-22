@@ -11,13 +11,13 @@ model = genai.GenerativeModel('gemini-2.5-flash', generation_config={"response_m
 
 def map_programmes():
     # Load the 35 old programmes
-    old_df = pd.read_csv('curricular_mapping.csv')
+    old_df = pd.read_csv(r'd:/Jupyter notebook/Graph rag/data/curricular_mapping.csv')
     old_programmes = sorted(old_df['programme'].dropna().unique().tolist())
     
     print(f"Found {len(old_programmes)} unique old programmes.")
     
     # Load the 252 new official programmes
-    new_df = pd.read_csv('hierarchy_mapping.csv')
+    new_df = pd.read_csv(r'd:/Jupyter notebook/Graph rag/data/hierarchy_mapping.csv')
     new_programmes = sorted(new_df['Programme'].dropna().unique().tolist())
     
     prompt = f"""
@@ -78,11 +78,11 @@ def map_programmes():
         available_cols = [c for c in cols if c in merged_df.columns]
         merged_df = merged_df[available_cols]
         
-        # Rename lower case 'level' (numeric year) back to standard
+        # Rename lower case 'level' back to standard
         merged_df = merged_df.rename(columns={'Level': 'Academic_Level', 'level': 'year'})
         
         # Export as the new pristine map
-        merged_df.to_csv('master_curricular_mapping.csv', index=False)
+        merged_df.to_csv(r'd:/Jupyter notebook/Graph rag/data/master_curricular_mapping.csv', index=False)
         print("Successfully generated master_curricular_mapping.csv")
         
     except Exception as e:

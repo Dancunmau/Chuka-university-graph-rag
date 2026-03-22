@@ -8,7 +8,6 @@ USER = os.getenv("NEO4J_USERNAME")
 PWD  = os.getenv("NEO4J_PASSWORD")
 
 # KEYWORD MAPPING: Define core keywords for each department/faculty
-# This acts as a semantic bridge for resources without course codes.
 DEPARTMENT_KEYWORDS = {
     "Department of Agricultural Economics": ["agriculture", "agribusiness", "farm", "crop", "livestock", "soil", "tomato", "irrigation", "agri", "rural", "pigeon pea", "coffee", "banana"],
     "Department of Computer Science": ["computer", "software", "network", "algorithm", "data", "web", "internet", "wireless", "programming", "system", "information", "it", "digital"],
@@ -30,7 +29,6 @@ def link_resources():
             print(f"Processing {dept_name}...")
             
             # Cypher query to find unlinked items matching any keyword
-            # We use toLower() for case-insensitive matching in Neo4j
             query = """
             UNWIND $keywords AS kw
             MATCH (ri:RepositoryItem)
@@ -54,7 +52,7 @@ def link_resources():
             total_created += created
             print(f"  - Linked {created} items.")
 
-        print(f"\nDone! Total [:BELONGS_TO_DEPARTMENT] relationships created: {total_created}")
+        print(f"\nDone Total [:BELONGS_TO_DEPARTMENT] relationships created: {total_created}")
 
     driver.close()
 

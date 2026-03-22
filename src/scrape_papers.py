@@ -7,7 +7,7 @@ import time
 from urllib.parse import urljoin
 
 BASE_URL = "https://repository.chuka.ac.ke"
-CSV_FILE = "d:/Jupyter notebook/chuka_exam_papers_metadata.csv"
+CSV_FILE = r'd:/Jupyter notebook/Graph rag/data/chuka_exam_papers_metadata.csv'
 
 def get_soup(url):
     try:
@@ -21,8 +21,8 @@ def get_soup(url):
 
 
 def extract_course_code(title):
-    # Regex for common course codes like 'COSC 123', 'MATH 101', 'ZOOL 443'
-    # Look for 3-4 letters followed by 3-4 digits, possibly with space
+    # Regex for common course codes like 'COSC 123', 'MATH 101'
+    # Look for 3-4 letters followed by 3-4 digits with space
     match = re.search(r'([A-Z]{3,4})\s*(\d{3,4})', title, re.IGNORECASE)
     if match:
         return f"{match.group(1).upper()} {match.group(2)}"
@@ -33,8 +33,8 @@ def search_via_api(base_url, query, max_items=25000):
     # DSpace 7 API endpoint for discovery
     api_url = f"{base_url}/server/api/discover/search/objects"
     
-    # We use a larger page size to minimize requests (Rate limit seems to be ~500)
-    # 100 is typically a safe upper limit for DSpace pages
+    # use a larger page size to minimize requests 
+    # 100 is a safe upper limit for DSpace pages
     params = {
         "dsoType": "ITEM",
         "size": 100, 
@@ -46,7 +46,7 @@ def search_via_api(base_url, query, max_items=25000):
     page = 0
     total_fetched = 0
     
-    # Initialize CSV if not exists (so we can append safely)
+    # Initialize CSV if not exists 
     if not os.path.exists(CSV_FILE):
         # Create empty CSV with headers
         pd.DataFrame(columns=["course_code", "year", "title", "repository_link", "scraped_date"]).to_csv(CSV_FILE, index=False)
@@ -55,10 +55,7 @@ def search_via_api(base_url, query, max_items=25000):
         params['page'] = page
         print(f"Fetching API page {page} (Total fetched so far: {total_fetched})...")
         try:
-            # CLAUDE FEEDBACK NOTE: verify=False is required here because the 
-            # Chuka University server has an invalid/self-signed SSL certificate.
-            # Without this, the script will crash with SSLError/CertificateError.
-            # We suppress the warning in production code usually, but here we just accept it.
+
             resp = requests.get(api_url, params=params, verify=False) 
             resp.raise_for_status()
             
@@ -70,7 +67,7 @@ def search_via_api(base_url, query, max_items=25000):
             
             data = resp.json()
             
-            # Navigate JSON structure: _embedded -> searchResult -> _embedded -> objects
+            # Navigate JSON structure: _embedded > searchResult > _embedded > objects
             search_result = data.get('_embedded', {}).get('searchResult', {})
             objects = search_result.get('_embedded', {}).get('objects', [])
             
@@ -116,19 +113,18 @@ def search_via_api(base_url, query, max_items=25000):
                 df_page = pd.DataFrame(page_items)
                 # Append to CSV. Header=False because file already exists (created at start or existing)
                 df_page.to_csv(CSV_FILE, mode='a', header=False, index=False)
-                # Deduplicate on the fly is expensive, so we'll just append and user can dedup later
-                # actually, let's keep it simple: just append. 
-                print(f"  -> Saved {len(page_items)} items to {CSV_FILE}")
+                #Append and user can dedup later
+                print(f"  > Saved {len(page_items)} items to {CSV_FILE}")
 
             total_fetched += len(objects)
             page += 1
-            # Polite API spacing
+            # API spacing
             time.sleep(1)
             
         except Exception as e:
             print(f"API Error at page {page}: {e}")
             # If rate limited (429) or error, pause and retry logic could go here
-            # For now, we wait a bit and retry the same loop (or break if strict)
+            #Wait a bit and retry the same loop
             time.sleep(5)
             # Break to avoid infinite loops on hard errors
             break
@@ -136,14 +132,14 @@ def search_via_api(base_url, query, max_items=25000):
     return total_fetched
 
 def main():
-    print("Starting API-based scrape for ALL repository items...")
-    print("NOTE: Data is saved incrementally. You can stop the script at any time.")
+    print("Starting API based scrape for ALL repository items")
+    print("Data is saved incrementally. You can stop the script at any time.")
     
     # 2. Search API
-    # Empty query "" generally fetches all items in DSpace discovery
-    print(f"Fetching all items...")
+    # Empty query "" fetches all items in DSpace discovery
+    print(f"Fetching all items")
     
-    # We verify if we are appending or creating new
+    # Verify if we are appending or creating new
     if os.path.exists(CSV_FILE):
         print(f"Appending to existing file: {CSV_FILE}")
     else:

@@ -8,7 +8,7 @@ import time
 import os
 
 BASE_URL = "https://repository.chuka.ac.ke"
-OUTPUT_FILE = "d:/Jupyter notebook/selected_communities.csv"
+OUTPUT_FILE = r'd:/Jupyter notebook/Graph rag/data/communities.csv'
 
 def load_communities():
     """Load the communities list"""
@@ -114,7 +114,7 @@ def main():
         "examination",
         "exam paper",
         "past paper",
-        "school of"  # Also exclude "School of X" which are similar to faculties
+        "school of"  # Also exclude "School of X",similar to faculties
     ]
     
     filtered_communities = []
@@ -142,7 +142,7 @@ def main():
     print("(Data will be saved incrementally)")
     print('='*60)
     
-    # Initialize or load existing data
+    # load existing data
     if os.path.exists(OUTPUT_FILE):
         print(f"\nAppending to existing file: {OUTPUT_FILE}")
         df_existing = pd.read_csv(OUTPUT_FILE)

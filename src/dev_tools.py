@@ -1,11 +1,4 @@
 """
-dev_tools.py
-============
-Consolidated diagnostic and verification tool for the Chuka University GraphRAG project.
-
-Usage:
-    python dev_tools.py --tool <name> [--query <text>]
-
 Available tools:
     graph_stats     - Print Neo4j node counts and relationship types
     communities     - Verify RepositoryItem linkage and sample SOCI resources

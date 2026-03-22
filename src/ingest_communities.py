@@ -1,6 +1,4 @@
 """
-ingest_communities.py
-
 Hybrid ingestion of communities.csv:
   1. Neo4j: Create RepositoryItem nodes linked to CourseUnit via extracted course code
   2. FAISS: Append community titles to the existing semantic index
@@ -21,11 +19,11 @@ USER = os.getenv("NEO4J_USERNAME")
 PWD  = os.getenv("NEO4J_PASSWORD")
 
 BASE = 'd:/Jupyter notebook/Graph rag'
-COMMUNITIES_PATH = f'{BASE}/communities.csv'
+COMMUNITIES_PATH = f'{BASE}/data/communities.csv'
 FAISS_INDEX_PATH = f'{BASE}/faiss_index.bin'
 METADATA_PATH    = f'{BASE}/faiss_metadata.pkl'
 
-# Communities relevant to students (skip Archives & Corporate Docs)
+# Communities relevant to students skip Archives & Corporate Docs
 RELEVANT_COMMUNITIES = {
     'Books/Book Chapters/Book Reviews',
     'Conferences',
@@ -167,18 +165,18 @@ def main():
     print(f"Total rows in communities.csv: {len(df)}")
     print(f"Communities found: {df['community'].unique().tolist()}\n")
 
-    # Filter to student-relevant communities
+    # Filter to student relevant communities
     relevant_df = df[df['community'].isin(RELEVANT_COMMUNITIES)]
     print(f"Rows after filtering to relevant communities: {len(relevant_df)}\n")
 
-    # --- Neo4j ---
+    # Neo4j 
     print("Step 1: Ingesting into Neo4j...")
     driver = GraphDatabase.driver(URI, auth=(USER, PWD))
     ingest_to_neo4j(relevant_df, driver)
     driver.close()
     print("Neo4j ingestion complete.\n")
 
-    # --- FAISS ---
+    # FAISS 
     print("Step 2: Updating FAISS index...")
     ingest_to_faiss(relevant_df)
     print("FAISS update complete.\n")

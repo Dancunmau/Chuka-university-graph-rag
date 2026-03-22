@@ -31,7 +31,7 @@ wheels/
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
-# Data and Indices (excluding small CSVs if needed, or including all large generated files)
+# Data
 data/*.bin
 data/*.pkl
 data/*.csv

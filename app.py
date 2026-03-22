@@ -1,8 +1,6 @@
 """
-app.py
-======
-The primary high-fidelity Streamlit interface for the Chuka University GraphRAG Assistant.
-Handles real-time user interaction, document processing, and session management.
+Streamlit frontend for the Chuka University GraphRAG Assistant.
+Manages the chat interface, session states, and PDF/Voice uploads.
 """
 
 import streamlit as st
@@ -20,19 +18,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-#  1. GLOBAL RESOURCE CACHING 
-# Prevents expensive re-initialization of LLM pipelines and FAISS indexes.
+# Global Resource Initialization
 @st.cache_resource(show_spinner=False)
 def get_assistant():
-    """Global caching for the heavy GraphRAG pipelines to prevent FAISS RAM exhaustion."""
+    """Caches the GraphRAG pipeline globally to share the Neo4j connection pool and FAISS index in memory across user sessions."""
     from src.chuka_graphrag_pipeline import GraphRAGAssistant
     return GraphRAGAssistant()
 
-# ──2. PREMIUM UI STYLING (CSS) ──
-# Custom-tuned to create a modern, academic "Expert System" aesthetic.
+# UI Styling
 st.markdown("""
 <style>
-/* ── 1. Force light mode on everything except sidebar ─────── */
+/* 1. Force light mode on main content area */
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stAppViewBlockContainer"],
@@ -43,7 +39,7 @@ html, body,
 [data-testid="stAppViewContainer"] > section:nth-child(2) {
     background-color: #ffffff !important;
 }
-/* ── 2. SIDEBAR – dark navy ───────────────────────────────── */
+/* 2. Sidebar styling */
 [data-testid="stSidebar"],
 [data-testid="stSidebar"] > div,
 [data-testid="stSidebarContent"] {
@@ -71,20 +67,20 @@ html, body,
     border-color: #5a6aaa !important;
 }
 
-/* ── 3. MAIN — white background, no padding artefacts ─────── */
+/* 3. Main container spacing */
 .block-container {
     padding-top: 3.5rem !important;
     background: #ffffff !important;
 }
 
-/* ── 4. CHAT messages — no background bubbles ─────────────── */
+/* 4. Chat messages UI cleanup */
 [data-testid="stChatMessage"] {
     background: none !important;
     border: none !important;
     box-shadow: none !important;
     padding: 12px 0 !important;
 }
-/* ── 5. Chat input bar ─────────────────────────────────────── */
+/* 5. Chat input bar styling */
 [data-testid="stChatInput"] > div {
     background: #f4f6fb !important;
     border: 1px solid #dce1ef !important;
@@ -95,7 +91,7 @@ html, body,
     color: #1a1a2e !important;
 }
 
-/* ── 6. Onboarding — inputs must be white ─────────────────── */
+/* 6. Onboarding form fields */
 div[data-baseweb="select"] > div {
     background: #ffffff !important;
     color: #1a1a2e !important;
@@ -164,11 +160,33 @@ header[data-testid="stHeader"] {
     padding-bottom: 120px !important;
 }
 
+/* Responsive adjustments for Mobile/Tablet */
+@media screen and (max-width: 768px) {
+    .custom-header {
+        padding: 15px 20px !important;
+        margin: 0 -20px 20px -20px !important;
+    }
+    .header-title {
+        font-size: 1.3rem !important;
+    }
+    .main .block-container {
+        padding-top: 10px !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    /* Force Streamlit columns to stack cleanly on smaller screens */
+    [data-testid="column"] {
+        min-width: 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# ── 3. SESSION IDENTITY & SECURITY ────────────────────
-# Every browser instance is assigned a unique device token for persistent history.
+# Session Identity Management
+# Uses URL-based device tokens for anonymous session tracking.
+# replace with SSO/OAuth in future.
 if "device_token" not in st.session_state:
     query_params = st.query_params
     if "token" in query_params:
@@ -180,19 +198,15 @@ if "device_token" not in st.session_state:
 user = get_or_create_user(device_token=st.session_state.device_token)
 st.session_state.user_id = user["user_id"]
 
-@st.cache_resource(show_spinner=False)
-def load_assistant():
-    return GraphRAGAssistant()
-
 if "assistant" in st.session_state:
     if not hasattr(st.session_state.assistant, "get_personalized_timetable"):
         del st.session_state["assistant"]
         st.cache_resource.clear()
 
-# ── 4. BACKEND PIPELINE INITIALIZATION ──────────────────────────────────
-# Globally cached assistant prevents duplicate LLM connector instances.
+
+# State Initialization
 if "assistant" not in st.session_state:
-    st.session_state.assistant = load_assistant()
+    st.session_state.assistant = get_assistant()
 
 if "mapped_programmes" not in st.session_state:
     st.session_state.mapped_programmes = st.session_state.assistant.get_mapped_programmes()
@@ -227,10 +241,10 @@ if "extra_context" not in st.session_state:
 if "uploaded_file_name" not in st.session_state:
     st.session_state.uploaded_file_name = None
 
-# ── 5. ONBOARDING & PROFILE MANAGEMENT ──────────────────────────────────
-# Captures academic identity (Faculty/Program) to ground future responses.
+# UI Components: Onboarding
 def onboarding_screen():
-    _, col, _ = st.columns([1, 1.2, 1])
+    """Initial screening to capture academic context used to filter Cypher queries."""
+    _, col, _ = st.columns([1, 2.5, 1])
     with col:
         st.markdown("""
         <div style="text-align:center;margin-bottom:20px;margin-top:40px;">
@@ -244,7 +258,7 @@ def onboarding_screen():
 
         mapped_progs = st.session_state.get('mapped_programmes', [])
         
-        # 1. Dynamic Faculty Selection
+        # 1. Faculty Selection
         if not mapped_progs:
             faculties = ["Select Faculty", "Faculty of Science & Technology", "Faculty of Business Studies"]
         else:
@@ -270,6 +284,8 @@ def onboarding_screen():
         )
         
         program = program_select['name'] if isinstance(program_select, dict) else program_select
+        department = program_select['department'] if isinstance(program_select, dict) and 'department' in program_select else None
+        
         year = st.selectbox("Year of Study", ["Select Year", "1", "2", "3", "4", "5"])
         semester = st.selectbox("Semester", ["Select Semester", "1", "2", "3"])
 
@@ -280,9 +296,9 @@ def onboarding_screen():
                 st.error("Please complete all fields.")
             else:
                 st.session_state.user_profile = {
-                    "faculty": faculty, "program": program, "year": year, "semester": semester
+                    "faculty": faculty, "department": department, "program": program, "year": year, "semester": semester
                 }
-                save_user_profile(st.session_state.user_id, faculty, None, program, year, semester)
+                save_user_profile(st.session_state.user_id, faculty, department, program, year, semester)
                 st.rerun()
 
     st.markdown("""
@@ -315,7 +331,9 @@ def course_explorer_view():
 
     @st.cache_data
     def load_data():
-        df = pd.read_csv("d:/Jupyter notebook/Graph rag/data/curricular_mapping.csv")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(base_dir, "data", "curricular_mapping.csv")
+        df = pd.read_csv(data_path)
         return df.fillna("Unknown")
 
     try:
@@ -377,8 +395,7 @@ def course_explorer_view():
     except Exception as e:
         st.error(f"Could not load course data: {e}")
 
-# ── 6. MAIN CHAT & ANALYSIS INTERFACE ────────────────────────────────────
-# The primary orchestration point for the ChatGPT-style interaction layer.
+# UI Components: Main Chat Interface
 def main_chat():
     if "current_view" not in st.session_state:
         st.session_state.current_view = "chat"
@@ -441,7 +458,7 @@ def main_chat():
                 ))
                 elements.append(Spacer(1, 15))
 
-                # Define Grid Matrix
+                # Grid Matrix
                 days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
                 time_slots = ["7:00AM-10:00AM", "10:00AM-1:00PM", "1:00PM-4:00PM", "4:00PM-7:00PM"]
                 
@@ -483,7 +500,7 @@ def main_chat():
                 
                 elements.append(Spacer(1, 20))
                 elements.append(Paragraph(
-                    "<font color='grey' size='8'><i>Legend: UNIT_CODE (ROOM) | Generated by Chuka AI Expert System</i></font>",
+                    "<font color='grey' size='8'><i>Legend: UNIT_CODE (ROOM) | Generated by Chuka Virtual Assistant</i></font>",
                     styles['Normal']
                 ))
 

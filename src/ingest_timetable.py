@@ -1,15 +1,13 @@
 """
-ingest_timetable.py
-====================
 Unified timetable ingestion script for the Chuka University GraphRAG system.
 
 Two modes:
-  --mode full         Wipe all TimetableSlots and re-ingest everything (default)
-  --mode incremental  Only create slots for CourseUnits that lack one
+    :mode full         Wipe all TimetableSlots and re-ingest everything 
+    :mode incremental  Only create slots for CourseUnits that lack one
 
 Usage:
-  python src/ingest_timetable.py                  # full wipe + re-ingest
-  python src/ingest_timetable.py --mode incremental  # gap-fill only
+    :python src/ingest_timetable.py                  # full wipe + re-ingest
+    :python src/ingest_timetable.py --mode incremental  # gap-fill only
 """
 import os
 import re
@@ -20,7 +18,8 @@ import pandas as pd
 from neo4j import GraphDatabase
 from dotenv import load_dotenv
 
-# ── Config ────────────────────────────────────────────────────────────────────
+
+# Configuration
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 URI  = os.getenv("NEO4J_URI")
 USER = os.getenv("NEO4J_USERNAME")
@@ -33,7 +32,8 @@ DAY_INDEXES = {
     'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+
+# Helper Functions
 def parse_time_range(time_str):
     """Parses '7:00AM-10:00AM' into ('07:00', '10:00')."""
     try:
@@ -58,7 +58,7 @@ def normalize_code(raw: str) -> str:
     code = re.sub(r'\s+', ' ', code)
     return code.strip().upper()
 
-# ── Load CSV ──────────────────────────────────────────────────────────────────
+# Load CSV Data
 def load_csv():
     if not os.path.exists(CSV_PATH):
         print(f"Error: {CSV_PATH} not found.")
@@ -85,7 +85,7 @@ def load_csv():
     print(f"Loaded {len(rows)} timetable entries from CSV.")
     return rows
 
-# ── Full Ingest (wipe + rebuild) ──────────────────────────────────────────────
+# Full Ingestion (wipe + rebuild)
 def full_ingest(driver, rows):
     with driver.session() as session:
         print("Wiping existing TimetableSlots...")
@@ -126,7 +126,7 @@ def full_ingest(driver, rows):
         print(f"  Programme-linked units: {program_linked}")
         print(f"  Rooms created/merged: {rooms}")
 
-# ── Incremental Ingest (gap-fill only) ────────────────────────────────────────
+# Incremental Ingestion (gap-fill only)
 def incremental_ingest(driver, rows):
     with driver.session() as session:
         unmapped = session.run("""

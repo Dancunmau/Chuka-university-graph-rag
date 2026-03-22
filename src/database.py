@@ -1,8 +1,5 @@
-"""
-database.py
-===========
-The persistence layer for the Chuka University Expert System.
-Orchestrates SQLAlchemy/PostgreSQL connections for user state and chat logging.
+"""Persistence layer for the Chuka University GraphRAG Assistant.
+Orchestrates SQLAlchemy/PostgreSQL connections for user state and chat history.
 """
 
 import os
@@ -14,8 +11,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── 1. POSTGRESQL ENGINE CONFIGURATION ──────────────────────────────────
-# Optimized for production-ready data persistence as per the project proposal.
+
+# PostgreSQL  Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
     raise ValueError("DATABASE_URL must be a valid PostgreSQL connection string (starting with 'postgresql://')")
@@ -31,7 +28,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# ── 2. SCHEMA DEFINITIONS (ORMs) ──────────────────────────────────────────
+# Schema Definitions (ORMs)
 class User(Base):
     __tablename__ = "users"
     
@@ -69,8 +66,8 @@ class History(Base):
     
     user = relationship("User", back_populates="history")
 
-# ── 3. AUTOMATED SCHEMA MIGRATIONS / INITIALIZATION ──────────────────────
-# Handles incremental column updates for production zero-downtime evolution.
+
+# Automated Schema Migrations / Initialization
 Base.metadata.create_all(bind=engine)
 
 # Migration: Provision 'session_id' for multi-session chat tracking.
@@ -80,7 +77,7 @@ try:
         conn.execute(text("CREATE INDEX ix_history_session_id ON history (session_id)"))
         conn.commit()
 except Exception:
-    pass # Column provisioned in previous deployment.
+    pass 
 
 # Migration: Provision 'department' column for granular onboarding profiles.
 try:
@@ -88,10 +85,9 @@ try:
         conn.execute(text("ALTER TABLE user_profile ADD COLUMN department VARCHAR(120)"))
         conn.commit()
 except Exception:
-    pass # Column provisioned in previous deployment.
+    pass 
 
-# ── 4. DATA ACCESS OBJECTS (DAOs) ───────────────────────────────────────
-
+# Data Access Objects (DAOs)
 def get_or_create_user(device_token=None):
     """Retrieve user by token, or create a new one. Returns a plain dict."""
     db = SessionLocal()
@@ -111,13 +107,13 @@ def get_or_create_user(device_token=None):
             db.commit()
             db.refresh(user)
 
-        # Return a plain dict — avoids DetachedInstanceError
+        # Return a plain dict to avoid error
         return {"user_id": user.user_id, "device_token": user.device_token}
     finally:
         db.close()
 
 def save_user_profile(user_id, faculty, department, program, year_of_study, semester):
-    """Save or update user's academic profile in PostgreSQL/SQLite"""
+    """Save or update user's academic profile in the PostgreSQL database."""
     db = SessionLocal()
     try:
         profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
@@ -136,7 +132,7 @@ def save_user_profile(user_id, faculty, department, program, year_of_study, seme
         db.close()
 
 def log_chat_history(user_id, session_id, query_text, response_text):
-    """Store the chat history for the user session"""
+    """Store the chat history for the user session."""
     db = SessionLocal()
     try:
         chat = History(

@@ -1,17 +1,16 @@
 
 """
-chuka_graphrag_pipeline.py
-==========================
-The core GraphRAG orchestration layer for the Chuka University Expert System.
+Orchestrates the GraphRAG pipeline for the Chuka University assistant.
 
-Architecture:
-  1. classify_intent()    → Gemini decides retrieval route
-  2. extract_entities()   → regex + Gemini extracts course codes, programme, year, sem
-  3. retrieve_from_graph() → Cypher traversal in Neo4j
-  4. retrieve_from_faiss() → semantic search in FAISS (handbook, policies, advert)
-  5. merge_and_generate() → Gemini 2.0 Flash synthesises grounded response
-  6. GraphRAGAssistant.generate_response() → public API called by app.py
+Architecture flow:
+  1. classify_intent(): Determines whether to query the graph, vector store, or both.
+  2. extract_entities(): Extracts structured parameters (course, year, etc.) using Gemini with regex fallback.
+  3. retrieve_from_graph(): Executes targeted Cypher queries in Neo4j.
+  4. retrieve_from_faiss(): Performs semantic search across policy documents (if available).
+  5. synthesise_response(): Grounds the final LLM response using retrieved context.
+  6. GraphRAGAssistant.generate_response(): Main pipeline entry point.
 """
+
 
 import os
 import re
@@ -21,13 +20,16 @@ import logging
 import numpy as np
 import typing_extensions as typing
 from tenacity import retry, wait_exponential, stop_after_attempt
+import threading
 
 from dotenv import load_dotenv
 import google.generativeai as genai
 from neo4j import GraphDatabase
 
-# ── 1. DEPENDENCY COORDINATION ──────────────────────────────────────────
-# Gracefully degrades if heavyweight ML libraries (FAISS) are missing.
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("ChukaPipeline")
+
+# FAISS dependency
 try:
     import faiss
     from sentence_transformers import SentenceTransformer
@@ -36,8 +38,7 @@ except ImportError:
     FAISS_AVAILABLE = False
     log.warning("FAISS/Sentence-Transformers missing — semantic search disabled.")
 
-# ── 2. ENVIRONMENT & API CONFIGURATION ──────────────────────────────────
-# Supports multi-key rotation to bypass Gemini rate limits.
+# API Configuration
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 NEO4J_URI      = os.getenv("NEO4J_URI", "")
@@ -54,19 +55,18 @@ current_key_idx = 0
 FAISS_INDEX_PATH    = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_index.bin")
 FAISS_METADATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "faiss_metadata.pkl")
 
-#Logging 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger("ChukaPipeline")
 
+# Thread lock for thread-safe API key rotation
+key_lock = threading.Lock()
 
-# Pre-defined tiered fallback models
-FALLBACK_MODELS = ["gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+# fallback models
+FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"]
 
 @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
-def _gemini_call(prompt: str, model_name=None) -> str:
+def _gemini_call(prompt_or_contents, model_name=None) -> str:
     """
-    Call Gemini with exponential back-off via tenacity, 
-    cascading model fallbacks, and robust key rotation.
+    Call Gemini with back-off via tenacity,
+    cascading model fallbacks, and thread-safe key rotation.
     """
     global current_key_idx
     
@@ -75,31 +75,34 @@ def _gemini_call(prompt: str, model_name=None) -> str:
     
     for m_name in models_to_try:
         try:
-            genai.configure(api_key=GEMINI_KEYS[current_key_idx])
+            with key_lock:
+                key_to_use = GEMINI_KEYS[current_key_idx]
+                
+            genai.configure(api_key=key_to_use)
             model = genai.GenerativeModel(m_name)
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt_or_contents)
             return response.text.strip()
             
         except Exception as e:
             err = str(e)
-            # If hit quota (429) or service issues, try the next model in this key tier first
-            if "429" in err or "quota" in err.lower() or "rate" in err.lower() or "503" in err:
-                log.warning(f"Model {m_name} failed (Quota/Issue). Attempting next model if available...")
-                continue # Try next model name
+            if "429" in err or "quota" in err.lower() or "rate" in err.lower():
+                log.warning(f"Quota exceeded on current key for model {m_name}. Rotating key...")
+                with key_lock:
+                    if len(GEMINI_KEYS) > 1:
+                        current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
+                #trigger Tenacity retry so it starts over with the primary model on the new key
+                raise Exception("Quota exceeded, key rotated. Retrying from top")
+            elif "503" in err:
+                log.warning(f"Model {m_name} failed. Attempting next model")
+                continue # Try next model name in the fallback cascade
             else:
-                # For non-quota errors, log and raise to tenacity
-                log.error(f"Critical Gemini Model Error ({m_name}): {err}")
+                log.error(f"Gemini Model Error ({m_name}): {err}")
                 raise e
 
-    # If all models in the list failed for this specific key, rotate the key and raise for retry
-    if len(GEMINI_KEYS) > 1:
-        current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
-        log.warning(f"All models failed for Key #{current_key_idx}. Rotating to API Key #{current_key_idx + 1}")
-    
-    raise Exception("All tiered models and current API key exhausted for this attempt.")
+    raise Exception("All tiered models exhausted")
 
-# ── 3. INTENT CLASSIFICATION ENGINE ─────────────────────────────────────
-# Uses Gemini to route queries between the Graph (Cypher) and Vector (FAISS) layers.
+
+# Retrieval Routing
 def classify_intent(query: str) -> str:
     """
     Returns one of: 'graph_query' | 'semantic_search' | 'hybrid'
@@ -107,17 +110,20 @@ def classify_intent(query: str) -> str:
     - semantic_search : policy, handbook, fee, procedure questions
     - hybrid : mixed (e.g. 'units and their exam regulations')
     """
-    prompt = f"""Classify this student query for Chuka University assistant routing.
+    prompt = f"""Classify the following student query to determine the best data retrieval strategy for the Chuka University assistant.
+
 Query: "{query}"
 
-Rules:
-- 'graph_query'      → asks about specific units, past papers, timetable for a programme/year/semester
-- 'semantic_search'  → asks about policies, fees, handbook info, procedures, regulations
-- 'hybrid'           → needs both structured graph data AND policy/handbook context
+Classification Rules:
+- "graph_query": The user is asking about highly structured academic data such as specific course units, timetable schedules, rooms, or past paper availability.
+- "semantic_search": The user is asking about general rules, handbook policies, fee structures, graduation procedures, or university regulations.
+- "hybrid": The user's query requires both structured database lookup AND general handbook context (e.g., "What are the exam rules for COSC 121?").
 
-Return ONLY one of: graph_query | semantic_search | hybrid"""
+You must respond with EXACTLY ONE of the following three core labels. Do not include any other text, punctuation, or explanations. 
 
-    result = _gemini_call(prompt)
+Labels: graph_query, semantic_search, hybrid"""
+
+    result = _gemini_call(prompt).strip().lower()
     for label in ["graph_query", "semantic_search", "hybrid"]:
         if label in result:
             return label
@@ -125,7 +131,6 @@ Return ONLY one of: graph_query | semantic_search | hybrid"""
     return "hybrid"
 
 
-#  2. Entity Extraction
 def extract_entities(query: str, profile: dict) -> dict:
     """
     Extract structured entities from the query.
@@ -162,7 +167,6 @@ Return valid JSON only, with these keys (use null if not found):
             if d.lower() in query.lower():
                 entities["day"] = d
                 break
-    return entities
 
     # Fill from profile where missing
     if profile:
@@ -177,7 +181,7 @@ Return valid JSON only, with these keys (use null if not found):
 
 
 
-#  3. Graph Retrieval (Neo4j) Helper Methods
+# Neo4j Cypher Helpers
 def _query_past_papers(session, query: str, entities: dict) -> list:
     results = []
     code = entities.get("course_code")
@@ -222,7 +226,7 @@ def _query_units(session, entities: dict) -> list:
     params = {"prog": prog}
     cypher = """
     MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
-    WHERE p.name =~ ('(?i).*' + $prog + '.*')
+    WHERE toLower(p.name) CONTAINS toLower($prog)
     """
     if year:
         cypher += " AND r.year = $year"
@@ -233,7 +237,7 @@ def _query_units(session, entities: dict) -> list:
 
     cypher += "\nOPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)"
     if day:
-        cypher += " WHERE t.day =~ ('(?i)' + $day)"
+        cypher += " WHERE toLower(t.day) = toLower($day)"
         params["day"] = day
 
     cypher += """
@@ -267,7 +271,7 @@ def _query_fees(session, query: str, entities: dict) -> list:
     if wants_fees:
         r = session.run("""
         MATCH (p:Programme)
-        WHERE p.name =~ ('(?i).*' + $prog + '.*')
+        WHERE toLower(p.name) CONTAINS toLower($prog)
         RETURN p.name as name, p.fee_string as fee, p.duration_string as duration
         """, prog=prog)
         rows = r.data()
@@ -297,12 +301,12 @@ def _query_resources(session, query: str, entities: dict) -> list:
     if code:
         r = session.run("""
         MATCH (c:CourseUnit)-[:HAS_RESOURCE]->(ri:RepositoryItem)
-        WHERE c.code =~ $pattern
+        WHERE toLower(c.code) CONTAINS toLower($code)
         RETURN ri.title as title, ri.author as author,
                ri.type as type, ri.year as year,
                ri.community as community, ri.link as link
         ORDER BY ri.year DESC LIMIT 8
-        """, pattern=f"(?i).*{re.escape(code)}.*")
+        """, code=code)
         rows = r.data()
         if rows:
             results.append(f"Study resources for {code}:")
@@ -400,9 +404,8 @@ def _query_catalogue(session, query: str) -> list:
             results.append(f"    - {row['programme']}")
     return results
 
-# ── 5. CORE RETRIEVAL ORCHESTRATION ────────────────────────────────────
+# Core Retrieval Orchestration
 
-# (A) Graph Retrieval (Neo4j/Cypher)
 def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> str:
     """Run Cypher queries against Neo4j by routing to specific handler functions."""
     results = []
@@ -456,7 +459,6 @@ def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> st
     return "\n".join(results) if results else ""
 
 
-# 4. FAISS Semantic Retrieval
 def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str:
     """Search FAISS index for relevant handbook/policy chunks."""
     if not FAISS_AVAILABLE or index is None:
@@ -479,9 +481,10 @@ def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str
         return ""
 
 
-# ── 6. LLM SYNTHESIS & GROUNDING ───────────────────────────────────────
 
-# (C) Final Answer Synthesis 
+# LLM Synthesis
+
+
 def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "") -> str:
     """Synthesise a grounded response using retrieved data."""
     profile_str = json.dumps(profile or {})
@@ -527,9 +530,9 @@ Response:"""
 
     log.error(f"Gemini synthesis failed for query: {query}. Falling back to friendly message.")
 
-    # Build a clean, student-friendly fallback (never expose raw internals)
+    # Build a clean callback
     if graph_ctx:
-        # Graph found structured data — summarise it plainly
+        # Graph found structured data 
         lines = [l.strip() for l in graph_ctx.split("\n") if l.strip() and not l.startswith("[")]
         excerpt = "\n".join(lines[:15])
         return (
@@ -566,7 +569,7 @@ class GraphRAGAssistant:
             raise ValueError("NEO4J_URI not set in .env")
         self.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
 
-        # FAISS (optional)
+        # FAISS 
         self.faiss_index = None
         self.faiss_meta  = []
         self.embedder    = None
@@ -620,15 +623,14 @@ class GraphRAGAssistant:
         log.info(f"Query Intent: {intent}")
         
         # 2. Entity Extraction
-        # Pass both query and profile (dict) to match definition
+        # Pass both query and profile to match definition
         entities = extract_entities(query, user_profile) 
         log.info(f"Extracted Entities: {entities}")
         
         # 3. Graph Retrieval
-        # retrieve_from_graph expects (query, entities, profile, driver)
         graph_nodes = retrieve_from_graph(query, entities, user_profile, self.driver)
         
-        # 4. FAISS Retrieval (if needed)
+        # 4. FAISS Retrieval
         faiss_results = ""
         if FAISS_AVAILABLE:
             faiss_results = retrieve_from_faiss(query, self.faiss_index, self.faiss_meta, self.embedder)
@@ -644,28 +646,15 @@ class GraphRAGAssistant:
         
         return response
 
-    @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(3))
     def transcribe_audio(self, audio_bytes: bytes) -> str:
         """Transcribe audio bytes using Gemini 2.5 Flash."""
-        global current_key_idx
-        try:
-            genai.configure(api_key=GEMINI_KEYS[current_key_idx])
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            # Create a Part from audio bytes
-            audio_part = {
-                "mime_type": "audio/wav", # Streamlit audio_input records as wav usually
-                "data": audio_bytes
-            }
-            prompt = "Transcribe this audio clip of a student query. Return only the transcription text."
-            response = model.generate_content([prompt, audio_part])
-            return response.text.strip()
-        except Exception as e:
-            err = str(e)
-            if "429" in err or "quota" in err.lower() or "rate" in err.lower():
-                if len(GEMINI_KEYS) > 1:
-                    current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
-            log.error(f"Transcription error: {err}. Retrying...")
-            raise e
+        audio_part = {
+            "mime_type": "audio/wav", # Streamlit audio_input records as wav
+            "data": audio_bytes
+        }
+        prompt = "Transcribe this audio clip of a student query. Return only the transcription text."
+        # Rely on the _gemini_call for locks, retries, and key rotation
+        return _gemini_call([prompt, audio_part], model_name="gemini-2.5-flash")
 
     def get_mapped_programmes(self) -> list:
         """Fetch programmes mapped to a Department and Faculty."""
@@ -693,7 +682,7 @@ class GraphRAGAssistant:
         with self.driver.session() as session:
             cypher = """
             MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
-            WHERE p.name =~ ('(?i).*' + $prog + '.*')
+            WHERE toLower(p.name) CONTAINS toLower($prog)
             """
             params = {"prog": prog}
             if year:
