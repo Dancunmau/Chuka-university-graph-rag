@@ -52,7 +52,7 @@ def extract_hierarchy():
     - Ensure EVERY programme has a Faculty.
     
     Advert Text (use for full list of programmes and their faculties):
-    {advert_text[:30000]} # Truncated if too long, but let's give it the whole thing if it fits
+    {advert_text}
     
     Handbook Text (use to find which Departments belong to which Faculties, and map programmes to them):
     {handbook_text}

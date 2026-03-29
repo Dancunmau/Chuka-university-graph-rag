@@ -1,188 +1,81 @@
-"""
-Hybrid ingestion of communities.csv:
-  1. Neo4j: Create RepositoryItem nodes linked to CourseUnit via extracted course code
-  2. FAISS: Append community titles to the existing semantic index
-"""
-import os
 import re
-import json
-import pickle
-import numpy as np
+import sys
 import pandas as pd
-from dotenv import load_dotenv
-from neo4j import GraphDatabase
+from neo4j_utils import get_driver, get_project_root, run_batch, close_driver, tc
 
-load_dotenv('d:/Jupyter notebook/Graph rag/.env')
-
-URI = os.getenv("NEO4J_URI")
-USER = os.getenv("NEO4J_USERNAME")
-PWD  = os.getenv("NEO4J_PASSWORD")
-
-BASE = 'd:/Jupyter notebook/Graph rag'
-COMMUNITIES_PATH = f'{BASE}/data/communities.csv'
-FAISS_INDEX_PATH = f'{BASE}/faiss_index.bin'
-METADATA_PATH    = f'{BASE}/faiss_metadata.pkl'
-
-# Communities relevant to students skip Archives & Corporate Docs
-RELEVANT_COMMUNITIES = {
-    'Books/Book Chapters/Book Reviews',
-    'Conferences',
-    'Journals/Journal Articles',
-    'Theses and Dissertations',
-    'Research Articles',
-    'Student Projects',
-}
+ROOT = get_project_root()
+CSV_PATH = ROOT / "data" / "communities.csv"
 
 def extract_course_codes(title):
-    """Extract course codes like COSC 121 or SOCI 403 from a title string."""
-    matches = re.findall(r'[A-Z]{2,5}\s*\d{3,4}', str(title))
-    return list(set(re.sub(r'([A-Z]+)\s*(\d+)', r'\1 \2', c) for c in matches))
+    matches = re.findall(r'[A-Z]{2,5}\s*\d{3,4}', str(title).upper())
+    return list({re.sub(r'([A-Z]+)\s*(\d+)', r'\1 \2', c) for c in matches})
 
+ITEM_MERGE_QUERY = """
+UNWIND $data AS row
+MERGE (r:RepositoryItem {link: row.link})
+SET r.title       = row.title,
+    r.author      = row.author,
+    r.type        = row.type,
+    r.year        = row.year,
+    r.community   = row.community,
+    r.is_academic = row.is_academic
+"""
 
-def ingest_to_neo4j(df, driver):
-    """Create RepositoryItem nodes and link them to CourseUnit nodes."""
-    items_with_codes = []
-    items_without_codes = []
+LINK_QUERY = """
+UNWIND $data AS row
+MATCH (r:RepositoryItem {link: row.link})
+MERGE (u:CourseUnit {code: row.code})
+MERGE (u)-[:HAS_RESOURCE]->(r)
+"""
 
+def load_data():
+    if not CSV_PATH.exists():
+        print(f"ERROR: {CSV_PATH} not found.")
+        sys.exit(1)
+
+    df = pd.read_csv(CSV_PATH).fillna('')
+    df.columns = [c.strip().lower() for c in df.columns]
+
+    items_all, items_with_code = [], []
     for _, row in df.iterrows():
+        link = str(row.get('repository_link', '')).strip()
+        if not link:
+            continue
+            
         codes = extract_course_codes(row['title'])
         entry = {
-            'link': row['repository_link'],
-            'title': row['title'],
-            'author': row.get('author', ''),
-            'type': row.get('type', ''),
-            'year': str(row.get('year', '')),
-            'community': row['community'],
-            'codes': codes,
+            'link':      link,
+            'title':     tc(str(row.get('title', '')).strip()),
+            'author':    tc(str(row.get('author', '')).strip()),
+            'type':      str(row.get('type', '')).strip(),
+            'year':      str(row.get('year', '')).strip(),
+            'community': str(row.get('community', '')).strip(),
+            'is_academic': bool(row.get('community', '') in ['Conferences', 'Journals/Journal Articles', 'Research Articles']),
         }
-        if codes:
-            items_with_codes.append(entry)
-        else:
-            items_without_codes.append(entry)
+        items_all.append(entry)
+        for code in codes:
+            items_with_code.append({'link': link, 'code': code})
 
-    print(f"  Items with course codes: {len(items_with_codes)}")
-    print(f"  Items without course codes (general content): {len(items_without_codes)}")
-    all_items = items_with_codes + items_without_codes
+    return items_all, items_with_code
 
-    with driver.session() as session:
-        # Constraint
-        session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (r:RepositoryItem) REQUIRE r.link IS UNIQUE")
-
-        batch_size = 300
-        total_batches = -(-len(all_items) // batch_size)
-        for i in range(0, len(all_items), batch_size):
-            batch = all_items[i:i+batch_size]
-            b_num = i // batch_size + 1
-
-            # Step A: Create/merge RepositoryItem nodes
-            session.run("""
-            UNWIND $data AS row
-            MERGE (r:RepositoryItem {link: row.link})
-            SET r.title     = row.title,
-                r.author    = row.author,
-                r.type      = row.type,
-                r.year      = row.year,
-                r.community = row.community
-            """, data=batch)
-
-            # Step B: For items with codes, create/link CourseUnit nodes
-            coded = [
-                {'link': e['link'], 'code': code}
-                for e in batch
-                for code in e['codes']
-            ]
-            if coded:
-                session.run("""
-                UNWIND $data AS row
-                MATCH (r:RepositoryItem {link: row.link})
-                MERGE (c:CourseUnit {code: row.code})
-                MERGE (c)-[:HAS_RESOURCE]->(r)
-                """, data=coded)
-
-            print(f"  Neo4j batch {b_num}/{total_batches} done.")
-
-
-def ingest_to_faiss(df):
-    """Append community items as chunks to the existing FAISS index."""
-    try:
-        import faiss
-        from sentence_transformers import SentenceTransformer
-    except ImportError:
-        print("faiss / sentence-transformers not installed.")
+def main(dry_run=False):
+    print("INGEST COMMUNITIES")
+    all_i, with_c = load_data()
+    if dry_run:
+        print(f"[DRY RUN] Would ingest {len(all_i)} items")
         return
 
-    # Load existing index and metadata
-    if os.path.exists(FAISS_INDEX_PATH) and os.path.exists(METADATA_PATH):
-        index = faiss.read_index(FAISS_INDEX_PATH)
-        with open(METADATA_PATH, 'rb') as f:
-            metadata = pickle.load(f)
-        print(f"  Loaded existing FAISS index with {index.ntotal} vectors.")
-    else:
-        print("  No existing FAISS index found — creating a new one.")
-        index = None
-        metadata = []
-
-    # Build text chunks from the community data
-    new_chunks = []
-    for _, row in df.iterrows():
-        text = f"{row['title']}"
-        if row.get('author'):
-            text += f" — {row['author']}"
-        if row.get('type'):
-            text += f" ({row['type']})"
-        if row.get('year'):
-            text += f" [{row['year']}]"
-        new_chunks.append({
-            'source': f"Repository:{row['community']}",
-            'page': '—',
-            'text': text,
-            'link': row['repository_link'],
-        })
-
-    print(f"  Encoding {len(new_chunks)} community items into FAISS...")
-    embedder = SentenceTransformer("all-mpnet-base-v2")
-    texts = [c['text'] for c in new_chunks]
-    vecs = embedder.encode(texts, batch_size=64, show_progress_bar=True).astype(np.float32)
-    faiss.normalize_L2(vecs)
-
-    if index is None:
-        dim = vecs.shape[1]
-        index = faiss.IndexFlatIP(dim)
-
-    index.add(vecs)
-    metadata.extend(new_chunks)
-
-    faiss.write_index(index, FAISS_INDEX_PATH)
-    with open(METADATA_PATH, 'wb') as f:
-        pickle.dump(metadata, f)
-
-    print(f"  FAISS index updated: {index.ntotal} total vectors.")
-
-
-def main():
-    df = pd.read_csv(COMMUNITIES_PATH).fillna('')
-
-    print(f"Total rows in communities.csv: {len(df)}")
-    print(f"Communities found: {df['community'].unique().tolist()}\n")
-
-    # Filter to student relevant communities
-    relevant_df = df[df['community'].isin(RELEVANT_COMMUNITIES)]
-    print(f"Rows after filtering to relevant communities: {len(relevant_df)}\n")
-
-    # Neo4j 
-    print("Step 1: Ingesting into Neo4j...")
-    driver = GraphDatabase.driver(URI, auth=(USER, PWD))
-    ingest_to_neo4j(relevant_df, driver)
-    driver.close()
-    print("Neo4j ingestion complete.\n")
-
-    # FAISS 
-    print("Step 2: Updating FAISS index...")
-    ingest_to_faiss(relevant_df)
-    print("FAISS update complete.\n")
-
-    print("All done!")
-
+    driver = get_driver()
+    try:
+        with driver.session() as s:
+            run_batch(s, ITEM_MERGE_QUERY, all_i, batch_size=300, label="items")
+            run_batch(s, LINK_QUERY, with_c, batch_size=300, label="links")
+        print("\nDone!")
+    finally:
+        close_driver(driver)
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--dry-run", action="store_true")
+    main(dry_run=p.parse_args().dry_run)

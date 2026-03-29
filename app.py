@@ -12,8 +12,8 @@ from src.database import get_or_create_user, save_user_profile, log_chat_history
 from src.pdf_handler import parse_chuka_document
 
 st.set_page_config(
-    page_title="Chuka University GraphRAG",
-    page_icon="",
+    page_title="Chuka University Assistant",
+    page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -181,6 +181,36 @@ header[data-testid="stHeader"] {
     }
 }
 
+/* 7. New: Vibrant Blue 'Continue' Button styling */
+div.stButton > button:not([data-testid="stSidebar"] *) {
+    background-color: #1b5cfc !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    width: 100% !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+div.stButton > button:not([data-testid="stSidebar"] *):hover {
+    background-color: #0d47d1 !important;
+    box-shadow: 0 10px 15px -3px rgba(27, 92, 252, 0.3), 0 4px 6px -2px rgba(27, 92, 252, 0.1) !important;
+    transform: translateY(-1px) !important;
+}
+
+div.stButton > button:not([data-testid="stSidebar"] *):active {
+    transform: translateY(0px) !important;
+}
+
+/* 8. Input fields focus styling */
+div[data-baseweb="select"] > div:focus-within {
+    border-color: #1b5cfc !important;
+    box-shadow: 0 0 0 1px #1b5cfc !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -300,19 +330,6 @@ def onboarding_screen():
                 }
                 save_user_profile(st.session_state.user_id, faculty, department, program, year, semester)
                 st.rerun()
-
-    st.markdown("""
-    <style>
-        .stButton > button {
-            background: #176BFF !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-        }
-        .stButton > button:hover { background: #0e52c9 !important; }
-    </style>
-    """, unsafe_allow_html=True)
 
 def course_explorer_view():
     import pandas as pd
@@ -632,7 +649,14 @@ def main_chat():
                             extra_context=st.session_state.get("extra_context", "")
                         )
                     except Exception as e:
-                        response = f"Sorry, I ran into an error: {e}"
+                        # Extract the actual exception if it's a tenacity RetryError
+                        try:
+                            cause = str(e.last_attempt.exception())
+                            # Sanitize verbose gRPC metadata from Google API errors
+                            clean_cause = cause.split("[")[0].strip()
+                            response = f"Sorry, the AI service encountered an error: **{clean_cause}**"
+                        except Exception:
+                            response = f"Sorry, I ran into an error: {e}"
                     st.markdown(response)
 
             st.session_state.chat_history.append({"role": "assistant", "content": response})

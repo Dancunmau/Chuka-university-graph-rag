@@ -18,6 +18,7 @@ import json
 import pickle
 import logging
 import numpy as np
+import datetime
 import typing_extensions as typing
 from tenacity import retry, wait_exponential, stop_after_attempt
 import threading
@@ -137,9 +138,18 @@ def extract_entities(query: str, profile: dict) -> dict:
     Returns dict with keys: course_code, programme, year, semester
     Falls back to regex parse if the LLM output deviates from JSON.
     """
+    now = datetime.datetime.now()
+    current_day = now.strftime("%A")
+    tomorrow = (now + datetime.timedelta(days=1)).strftime("%A")
+
     prompt = f"""Extract academic entities from this Chuka University student query.
 Query: "{query}"
-Student profile: {json.dumps(profile or {})}
+Student profile: {json.dumps(profile or {{}})}
+
+Current Date Context:
+- Today is: {current_day}
+- Tomorrow is: {tomorrow}
+(Translate any relative terms like "today" or "tomorrow" in the query into their actual day of the week)
 
 Return valid JSON only, with these keys (use null if not found):
 {{
@@ -160,7 +170,7 @@ Return valid JSON only, with these keys (use null if not found):
         entities = {"course_code": None, "programme": None, "year": None, "semester": None, "day": None, "topic": None}
         m_code = re.search(r'\b([A-Z]{3,5})\s*(\d{3,4})\b', query.upper())
         if m_code:
-            entities["course_code"] = f"{m_code.group(1)} {m_code.group(2)}"
+            entities["course_code"] = f"{m_code.group(1)} {m_code.group(2)}".upper()
         
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         for d in days:
@@ -225,14 +235,14 @@ def _query_units(session, entities: dict) -> list:
     
     params = {"prog": prog}
     cypher = """
-    MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
+    MATCH (p:Program)-[r:HAS_UNIT]->(u:CourseUnit)
     WHERE toLower(p.name) CONTAINS toLower($prog)
     """
     if year:
         cypher += " AND r.year = $year"
         params["year"] = f"Year {year}"
     if sem:
-        cypher += " AND r.semester = toInteger($sem)"
+        cypher += " AND r.semester = $sem"
         params["sem"] = str(sem)
 
     cypher += "\nOPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)"
@@ -243,7 +253,7 @@ def _query_units(session, entities: dict) -> list:
     cypher += """
     RETURN u.code as code, u.name as name,
            r.year as level, r.semester as semester,
-           collect(t.raw_text) as timeslots
+           collect(t.day + " " + t.time + " (" + t.room + ")") as timeslots
     ORDER BY u.code LIMIT 20
     """
     r = session.run(cypher, **params)
@@ -256,7 +266,7 @@ def _query_units(session, entities: dict) -> list:
         for row in rows:
             slot_str = ""
             if row.get('timeslots') and any(row['timeslots']):
-                slot_str = " | ".join([s for s in row['timeslots'] if s])
+                slot_str = " | ".join([s for s in row['timeslots'] if s and "None" not in s])
                 slot_str = f"\n    Timetable: {slot_str}"
             results.append(f"  - {row['code']}: {row['name']}{slot_str}")
     return results
@@ -270,7 +280,7 @@ def _query_fees(session, query: str, entities: dict) -> list:
     wants_fees = any(kw in str(query).lower() for kw in fee_keywords)
     if wants_fees:
         r = session.run("""
-        MATCH (p:Programme)
+        MATCH (p:Program)
         WHERE toLower(p.name) CONTAINS toLower($prog)
         RETURN p.name as name, p.fee_string as fee, p.duration_string as duration
         """, prog=prog)
@@ -340,15 +350,15 @@ def _query_current_units(session) -> list:
     results = []
     r = session.run("""
     MATCH (u:CourseUnit)-[:HAS_TIMESLOT]->(t:TimetableSlot)
-    WHERE u.is_current = 1
-    RETURN u.code as code, u.name as name, collect(t.raw_text) as timeslots
+    WHERE u.is_current = True
+    RETURN u.code as code, u.name as name, collect(t.day + " " + t.time + " (" + t.room + ")") as timeslots
     LIMIT 15
     """)
     rows = r.data()
     if rows:
         results.append("Units currently offered (Jan-April 2026):")
         for row in rows:
-            slot_str = " | ".join([s for s in row['timeslots'] if s])
+            slot_str = " | ".join([s for s in row['timeslots'] if s and "None" not in s])
             results.append(f"  - {row['code']}: {row['name']}\n    Timetable: {slot_str}")
     return results
 
@@ -377,8 +387,8 @@ def _query_catalogue(session, query: str) -> list:
 
     if faculty_filter:
         r = session.run("""
-        MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
-              -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
+        MATCH (f:Faculty)-[:HAS_DEPARTMENT]->(d:Department)
+              -[:OFFERS_PROGRAM]->(p:Program)
         WHERE f.name =~ $pattern
         RETURN f.name AS faculty, d.name AS department, p.name AS programme
         ORDER BY d.name, p.name
@@ -386,8 +396,8 @@ def _query_catalogue(session, query: str) -> list:
         header = f"Programmes offered (Faculty of {faculty_filter}):"
     else:
         r = session.run("""
-        MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)
-              -[:DEPARTMENT_OFFERS_PROGRAM]->(p:Program)
+        MATCH (f:Faculty)-[:HAS_DEPARTMENT]->(d:Department)
+              -[:OFFERS_PROGRAM]->(p:Program)
         RETURN f.name AS faculty, d.name AS department, p.name AS programme
         ORDER BY f.name, d.name, p.name
         """)
@@ -416,7 +426,7 @@ def retrieve_from_graph(query: str, entities: dict, profile: dict, driver) -> st
             prog = entities.get("programme") or profile.get("program") or profile.get("programme")
             if prog:
                 r_identity = session.run("""
-                MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)-[:DEPARTMENT_OFFERS_PROGRAM]->(p:Programme)
+                MATCH (f:Faculty)-[:HAS_DEPARTMENT]->(d:Department)-[:OFFERS_PROGRAM]->(p:Program)
                 WHERE p.name = $prog
                 RETURN f.name AS faculty, d.name AS department
                 """, prog=prog)
@@ -483,8 +493,6 @@ def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str
 
 
 # LLM Synthesis
-
-
 def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "") -> str:
     """Synthesise a grounded response using retrieved data."""
     profile_str = json.dumps(profile or {})
@@ -657,15 +665,16 @@ class GraphRAGAssistant:
         return _gemini_call([prompt, audio_part], model_name="gemini-2.5-flash")
 
     def get_mapped_programmes(self) -> list:
-        """Fetch programmes mapped to a Department and Faculty."""
+        """Fetch all programs registered in the hierarchy, including unit counts."""
         try:
             with self.driver.session() as session:
-                r = session.run("""
-                MATCH (f:Faculty)-[:FACULTY_HAS_DEPARTMENT]->(d:Department)-[:HAS_PROGRAMME]->(p:Programme)-[:HAS_UNIT]->(u)
-                RETURN DISTINCT p.name as name, d.name as department, f.name as faculty, count(DISTINCT u) as unit_count
-                ORDER BY f.name, d.name, p.name
-                """)
-                return [{"name": row["name"], "department": row["department"], "faculty": row["faculty"], "count": row["unit_count"]} for row in r]
+                query = """
+                MATCH (f:Faculty)-[:HAS_DEPARTMENT]->(d:Department)-[:OFFERS_PROGRAM]->(p:Program)-[:HAS_UNIT]->(u:CourseUnit)
+                RETURN f.name as faculty, d.name as department, p.name as name, count(u) as count
+                ORDER BY faculty, department, name
+                """
+                r = session.run(query)
+                return [{"name": row["name"], "department": row["department"], "faculty": row["faculty"], "count": row["count"]} for row in r]
         except Exception as e:
             log.error(f"Error fetching mapped programmes with hierarchies: {e}")
             return []
@@ -681,7 +690,7 @@ class GraphRAGAssistant:
         results = []
         with self.driver.session() as session:
             cypher = """
-            MATCH (p:Programme)-[r:HAS_UNIT]->(u:CourseUnit)
+            MATCH (p:Program)-[r:HAS_UNIT]->(u:CourseUnit)
             WHERE toLower(p.name) CONTAINS toLower($prog)
             """
             params = {"prog": prog}
@@ -690,7 +699,7 @@ class GraphRAGAssistant:
                 params["year"] = f"Year {year}"
             if sem:
                 cypher += " AND r.semester = $sem"
-                params["sem"] = int(sem)
+                params["sem"] = str(sem)
             
             cypher += """
             OPTIONAL MATCH (u)-[:HAS_TIMESLOT]->(t:TimetableSlot)

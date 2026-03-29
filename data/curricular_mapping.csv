@@ -354,8 +354,8 @@ BOTA 473,PLANT BIOCHEMISTRY,Faculty of Science & Technology,Department of Biolog
 BOTA 412,PLANT BIOTECHNOLOGY,Faculty of Science & Technology,Department of Biological Sciences,Bachelor,Bachelor of Science (Biology),Year 4,2,0
 BOTA 436,INDUSTRIAL MICROBIOLOGY,Faculty of Science & Technology,Department of Biological Sciences,Bachelor,Bachelor of Science (Biology),Year 4,2,1
 BOTA 474,PLANT PHYSIOLOGY II,Faculty of Science & Technology,Department of Biological Sciences,Bachelor,Bachelor of Science (Biology),Year 4,2,0
-DIBM 112,PRINCIPLES OF MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-DIBM 214,HUMAN RESOURCE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
+DIBM 112,PRINCIPLES OF MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+DIBM 214,HUMAN RESOURCE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
 CHEM 0010,CHEM 00102: BASIC CHEMISTRY STREAMS: CERT,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Certificate/Diploma Level,2,0
 CHEM 0102,BASIC CHEMISTRY STREAMS: DIP.,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Certificate/Diploma Level,2,0
 CHEM 801,ADVANCED CHEMOMETRICS STREAMS: MSC.,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Postgraduate Level,1,0
@@ -424,79 +424,79 @@ CHEM 438,HETEROCYCLIC CHEMISTRY,Faculty of Science & Technology,Department of Ph
 CHEM 446,CHEMISTRY OF NATURAL PRODUCTS STREAMS,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Year 4,2,0
 CHEM 448,ENVIRONMENTAL CHEMISTRY II STREAMS: BSC CHEMISTRY,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Year 4,2,0
 CHEM 452,ANALYTICAL CHEMISTRY II,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Chemistry,Year 4,2,0
-BCOM 101,BCOM 101/BCOM 100/BUST 111: INTRODUCTION TO BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,0
-BCOM 103,BCOM 103/CRSS 420/BCOM 102: PRINCIPLES OF MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BCOM 111,PRINCIPLES OF ACCOUNTING (RESIT/ SPECIAL EXAMINATION),Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BCOM 161,BUSINESS MATHEMATICS 1 STREAMS:BCOM/BEEM Y1S1 ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,0
-BCOM 163,COMPUTER APPLICATIONS IN BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BCOM 171,BCOM/BCOM 171/162: BUSINESS MATHEMATICS II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,0
-BCOM 102,/ ECON 111: PRINCIPLES OF MICROECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BCOM 104,BCOM 104/ECON 121/BBAM 103: PRINCIPLES OF MACROECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BCOM 112,BCOM 112/111: PRINCIPLES OF ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,1
-BCOM 162,BUSINESS MATHEMATICS II STREAMS:BCOM Y1S2,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,1
-BCOM 172,FUNDAMENTALS OF COMPUTERS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BCOM 211,BCOM 211/BUST 211: INTERMEDIATE ACCOUNTING 1/ INTERMEDIATE FINANCIAL ACCOUNTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BCOM 213,INTERMEDIATE ACCOUNTING II - ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 221,BCOM 221/BCOM 220 / BBAM 221/ BUST 122: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 231,BUSINESS FINANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 241,BCOM 241/BUST 321: RISK AND INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 251,INTRODUCTION TO HUMAN RESOURCE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 263,BCOM 263/BCOM 272/BBAM 272: OPERATIONS RESEARCH I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BCOM 202,BUSINESS LAW I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,1
-BCOM 212,BCOM 212/BBAM 212/BCOM 213: INTERMEDIATE ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,1
-BCOM 220,BCOM 220/221/BBAM 220/221/BUST 122/AGBM 221: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BCOM 230,"/ BCOM 231: BUSINESS FINANCE,BCOM, BPLM, BEEM, BCOP, BCOM 231",Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BCOM 240,BCOM 240/241: RISK AND INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BCOM 262,BCOM 262/AGBM 241: BUSINESS STATISTICS I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BCOM 272,BCOM 272/BCOM 236/BBAM 272/ECON 434/AGEC 415: OPERATIONS RESEARCH I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BCOM 303,CAREER MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 313,BCOM 313/316: ACCOUNTING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 315,BCOM 315/AGBM 415: TAX LAW AND PRACTISE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 321,BCOM 321/BUST 424: SALES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 325,CONSUMER BEHAVIOUR,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 329,MARKETING ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 333,MONEY AND BANKING STREAMS: BCOM Y3S1 ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 335,BCOM 335/BUST 412/BCOM 337: FINANCIAL MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 337,FINANCIAL MANAGEMENT 1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 339,MICRO FINANCE FOR DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 341,RISK MANAGEMENT STREAMS: BCOM/BCOP Y3S1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 345,LIABILITY INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BCOM 302,BCOM 302/355: ORGANIZATIONAL BEHAVIOR INSTRUCTIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 314,MANAGEMENT ACCOUNTING   BUST 421: MANAGEMENT ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 316,ACCOUNTING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 324,PUBLIC RELATIONS AND CUSTOMER SERVICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 326,MARKETING COMMUNICATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 336,BANKING LAW AND PRACTICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 338,REAL ESTATE FINANCE AND INVESTMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 346,INSURANCE OF TRANSPORTATION 1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 348,INSURANCE MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 356,EMPLOYEE RESOURCING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 358,LABOR RELATIONS MANAGEMENT STREAMS: ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 364,BCOM 364/357: MANAGEMENT OF DIVERSITY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BCOM 403,/ BCOM 405 / BENS 404: BUSINESS ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 405,BCOM 405/403/BENS 404: BUSINESS ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 415,INTERNATIONAL ACCOUNTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 425,MARKETING OF SERVICES AND NON-PROFIT ENTITIES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 427,RELATIONSHIP MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 435,INVESTMENT AND PORTFOLIO MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 437,CORPORATE FINANCIAL REPORTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 445,HEALTH INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 455,COMPENSATION MANAGEMENT STREAMS: ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 469,INTERNATIONAL OPERATIONS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BCOM 401,CUSTOMER CARE AND PUBLIC RELATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BCOM 411,TAX LAWS AND PRACTICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BCOM 404,ENTREPRENEURSHIP AND SMALLL BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 414,AUDITING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 418,ADVANCED SPECIALIZED FINANCIAL ACCOUNTINF TECHNIQUES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 424,COMMERCE BCOM 424: STRATEGIC MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 434,INTERNATIONAL FINANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 444,REINSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 446,SOCIAL INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 454,LABOR LAWS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 458,MANAGING CONFLICT AT WORK PLACE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 464,TOTAL QUALITY MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 466,ADVANCED BUSINESS STATISTICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BCOM 400,BCOM 400/401: RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
+BCOM 101,BCOM 101/BCOM 100/BUST 111: INTRODUCTION TO BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,0
+BCOM 103,BCOM 103/CRSS 420/BCOM 102: PRINCIPLES OF MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BCOM 111,PRINCIPLES OF ACCOUNTING (RESIT/ SPECIAL EXAMINATION),Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BCOM 161,BUSINESS MATHEMATICS 1 STREAMS:BCOM/BEEM Y1S1 ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,0
+BCOM 163,COMPUTER APPLICATIONS IN BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BCOM 171,BCOM/BCOM 171/162: BUSINESS MATHEMATICS II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,0
+BCOM 102,/ ECON 111: PRINCIPLES OF MICROECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BCOM 104,BCOM 104/ECON 121/BBAM 103: PRINCIPLES OF MACROECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BCOM 112,BCOM 112/111: PRINCIPLES OF ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,1
+BCOM 162,BUSINESS MATHEMATICS II STREAMS:BCOM Y1S2,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,1
+BCOM 172,FUNDAMENTALS OF COMPUTERS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BCOM 211,BCOM 211/BUST 211: INTERMEDIATE ACCOUNTING 1/ INTERMEDIATE FINANCIAL ACCOUNTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BCOM 213,INTERMEDIATE ACCOUNTING II - ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 221,BCOM 221/BCOM 220 / BBAM 221/ BUST 122: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 231,BUSINESS FINANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 241,BCOM 241/BUST 321: RISK AND INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 251,INTRODUCTION TO HUMAN RESOURCE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 263,BCOM 263/BCOM 272/BBAM 272: OPERATIONS RESEARCH I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BCOM 202,BUSINESS LAW I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,1
+BCOM 212,BCOM 212/BBAM 212/BCOM 213: INTERMEDIATE ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,1
+BCOM 220,BCOM 220/221/BBAM 220/221/BUST 122/AGBM 221: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BCOM 230,"/ BCOM 231: BUSINESS FINANCE,BCOM, BPLM, BEEM, BCOP, BCOM 231",Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BCOM 240,BCOM 240/241: RISK AND INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BCOM 262,BCOM 262/AGBM 241: BUSINESS STATISTICS I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BCOM 272,BCOM 272/BCOM 236/BBAM 272/ECON 434/AGEC 415: OPERATIONS RESEARCH I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BCOM 303,CAREER MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 313,BCOM 313/316: ACCOUNTING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 315,BCOM 315/AGBM 415: TAX LAW AND PRACTISE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 321,BCOM 321/BUST 424: SALES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 325,CONSUMER BEHAVIOUR,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 329,MARKETING ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 333,MONEY AND BANKING STREAMS: BCOM Y3S1 ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 335,BCOM 335/BUST 412/BCOM 337: FINANCIAL MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 337,FINANCIAL MANAGEMENT 1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 339,MICRO FINANCE FOR DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 341,RISK MANAGEMENT STREAMS: BCOM/BCOP Y3S1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 345,LIABILITY INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BCOM 302,BCOM 302/355: ORGANIZATIONAL BEHAVIOR INSTRUCTIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 314,MANAGEMENT ACCOUNTING   BUST 421: MANAGEMENT ACCOUNTING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 316,ACCOUNTING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 324,PUBLIC RELATIONS AND CUSTOMER SERVICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 326,MARKETING COMMUNICATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 336,BANKING LAW AND PRACTICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 338,REAL ESTATE FINANCE AND INVESTMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 346,INSURANCE OF TRANSPORTATION 1,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 348,INSURANCE MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 356,EMPLOYEE RESOURCING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 358,LABOR RELATIONS MANAGEMENT STREAMS: ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 364,BCOM 364/357: MANAGEMENT OF DIVERSITY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BCOM 403,/ BCOM 405 / BENS 404: BUSINESS ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 405,BCOM 405/403/BENS 404: BUSINESS ETHICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 415,INTERNATIONAL ACCOUNTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 425,MARKETING OF SERVICES AND NON-PROFIT ENTITIES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 427,RELATIONSHIP MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 435,INVESTMENT AND PORTFOLIO MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 437,CORPORATE FINANCIAL REPORTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 445,HEALTH INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 455,COMPENSATION MANAGEMENT STREAMS: ODEL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 469,INTERNATIONAL OPERATIONS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BCOM 401,CUSTOMER CARE AND PUBLIC RELATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BCOM 411,TAX LAWS AND PRACTICE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BCOM 404,ENTREPRENEURSHIP AND SMALLL BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 414,AUDITING II,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 418,ADVANCED SPECIALIZED FINANCIAL ACCOUNTINF TECHNIQUES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 424,COMMERCE BCOM 424: STRATEGIC MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 434,INTERNATIONAL FINANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 444,REINSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 446,SOCIAL INSURANCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 454,LABOR LAWS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 458,MANAGING CONFLICT AT WORK PLACE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 464,TOTAL QUALITY MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 466,ADVANCED BUSINESS STATISTICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BCOM 400,BCOM 400/401: RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
 CDEV 0015,CDEV 00150: RESEARCH METHODS STREAMS: CERT CRSS Y1S2,Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Science in Community Development,Certificate/Diploma Level,1,1
 CDEV 0103,FACILITATION OF DEVELOPMENT IN LOCAL COMMUNITIES STREAMS: DIP. CDEV (ODEL),Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Science in Community Development,Certificate/Diploma Level,1,1
 CDEV 0111,INTRODUCTION TO DEVELOPMENTAL STUDIES STREAMS: DIPLOMA CDEV (ODEL),Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Science in Community Development,Certificate/Diploma Level,1,1
@@ -922,7 +922,7 @@ ENSC 456,ENVIRONMENTAL LAW AND POLICY,Faculty of Environmental Studies and Resou
 ENSC 470,ENVIRONMENT AND INTERNATIONAL RELATIONS,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 4,2,0
 NARE 101,INTRODUCTION TO NATURAL RESOURCES,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
 NARE 111,INVERTEBRATES AND NATURAL RESOURCES STREAMS: BSC (NARE) Y1S2,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
-WIEM 101,INTRODUCTION TO WILDLIFE CONSERVATION AND                                                   MANAGEMENT,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
+WIEM 101,INTRODUCTION TO WILDLIFE CONSERVATION AND MANAGEMENT,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
 WIEM 121,FUNDAMENTALS OF ECOLOGY STREAMS: BSC,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
 WIEM 141,SWIMMING SKILLS AND FIRST AID,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,1,0
 NARE 110,INVERTEBRATE BIOLOGY,Faculty of Environmental Studies and Resources Development,Department of Environmental Studies & Resources Development,Bachelor,Bachelor of Science (Environmental Science),Year 1,2,0
@@ -1153,99 +1153,99 @@ PHIL 426,BRIEF HISTORY OF THE WILL,Faculty of Humanities and Social Sciences,Dep
 RELI 402,PHENOMENOLOGY OF RELIGION,Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Arts (General),Year 4,2,1
 RELI 406,PSYCHOLOGY OF RELIGION,Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Arts (General),Year 4,2,1
 RELI 434,THEOLOGY OF THE NEW TESTAMENT,Faculty of Humanities and Social Sciences,Department of Social Sciences,Bachelor,Bachelor of Arts (General),Year 4,2,1
-BLAW 111,LEGAL SYSTEMS AND LEGAL METHODS,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,0
-BLAW 115,LEGAL RESEARCH AND WRITING,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,0
-BLAW 121,CONSTITUTIONAL LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,1
-BLAW 123,LEGAL AND LEGISLATIVE DRAFTING,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,1
-BLAW 112,LEGAL COMMUNICATION SKILLS,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,0
-BLAW 114,SOCIAL FOUNDATIONS OF LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,0
-BLAW 122,– PROFESSIONAL ETHICS & PRACTICE,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
-BLAW 124,CRIMINOLOGY AND PENOLOGY,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
-BLAW 126,LAW OF TORTS,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
-BLAW 213,ADMINISTRATIVE LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
-BLAW 215,LAND LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
-BLAW 221,CRIMINAL LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
-BLAW 223,LAW OF BUSINESS ASSOCIATIONS II,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
-BLAW 225,THE LAW OF PROPERTY,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
-BLAWS 211,INTRODUCTION TO NATURAL RESOURCES MANAGEMENT AND ENVIRONMENTAL LAW STREAMS: BLAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
-BLAW 214,COMMERCIAL LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,0
-BLAW 216,LAW OF BUSINESS ASSOCIATIONS I,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,0
-BLAW 224,AGRICULTURE LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,1
-BLAW 311,CRIMINAL PROCEDURE,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
-BLAW 313,ENVIRONMENTAL LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
-BLAW 315,LABOUR LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
-BLAW 314,– ALTERNATIVE DISPUTE RESOLUTION,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
-BLAW 316,– COMPETITION LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
-BLAW 318,BANKING LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
-BLAW 411,JURISPRUDENCE,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 4,1,0
-BLAW 424,PUBLIC PROCUREMENT LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 4,2,1
-BLAW 426,CONSUMER PROTECTION LAW,School of Law,Department of Law,Bachelor,Bachelor of Laws (LLB),Year 4,2,1
-BEEM 111,BEEM 111/FOST 466/BCOP 402: PRINCIPLES OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BEEM 113,INTERNATIONAL DIMENSIONS OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BEEM 121,INTRODUCTION TO BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,0
-BPLM 101,BPLM 101/ECON 100: INTRODUCTION TO ECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,0
-BPLM 111,INTRODUCTION TO PROCUREMENT AND LOGISTICS  MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BPLM 113,INTRODUCTION TO SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BPLM 115,PUBLIC PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BPLM 121,SUPPLIES AND MATERIALS MANAGEMENT I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BPLM 171,PRINCIPLES OF ACCOUNTING STREAMS: BPLM Y1S2,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,1,1
-BEEM 112,ENTERPRENEURSHIP DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,1
-BPLM 102,BPLM 102/BCOM 170/BCOM 161: BUSINESS MATHEMATICS I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BPLM 112,SUPPLIES AND MATERIALS MANAGEMENT I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BPLM 114,INTRODUCTION TO SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,1
-BPLM 116,PUBLIC PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 1,2,0
-BEEM 215,ENTREPRENEURIAL BEHAVIOUR,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BPLM 211,STORES MANAGEMENT AND STOCK CONTROL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BPLM 213,MANAGING SUPPLY CHAIN RELATIONSHIPS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BPLM 215,INVENTORY MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BPLM 221,BCOM /BPLM 221: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BPLM 223,CLEARING AND FORWARDING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,1
-BPLM 271,INTERMEDIATE ACCOUNTING I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,1,0
-BEEM 214,STRATEGIC ENTREPRENEURSHIP MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BEEM 216,FUNDAMENTALS OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,1
-BPLM 212,TRANSPRORT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,0
-BPLM 214,RETAIL AND MERCHANDISE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,1
-BPLM 216,PURCHASING POLICY AND STRATEGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 2,2,1
-BEEM 323,INTERNATIONAL MARKETING FOR SMALL BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,0
-BEEM 325,MANAGEMENT OF ENTREPRENEURIAL VENTURES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BEEM 331,HIGH TECHNOLOGY VENTURES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,0
-BPLM 311,SYSTEMS PRODUCTION MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,0
-BPLM 313,PROCUREMENT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BPLM 315,PROCUREMENT LAW,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BPLM 321,/ BPSM 402: FINANCIAL MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,0
-BPLM 325,PROCUREMENT RECORDS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,1
-BPLM 361,PROJECT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,1,0
-BEEM 322,TECHNOLOGY AND INNOVATION MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,0
-BEEM 324,SMALL BUSINESS FINANCING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,0
-BEEM 332,ENTREPRENEURSHIP AND ECONOMIC DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,0
-BEEM 334,SOCIAL ENTREPRENEURSH IP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BPLM 302,BPLM 302/AGBM 404/BCOM 202: BUSINESS LAW,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,0
-BPLM 312,SUSTAINABLE SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BPLM 314,INTERNATIONAL PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,1
-BPLM 324,LOGISTICS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 3,2,0
-BEEM 401,BEEM 401/BEEM 335: ENTREPRENEURSHIP SKILLS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BEEM 403,ELECTRONIC COMMERCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BEEM 427,FAMILY BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BEEM 429,BUSINESS PLANNING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BEEM 435,ENTERPRISE PROMOTION,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BEEM 437,SMALL BUSINESS POLICY AND STRATEGY DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BPLM 401,BPLM 401/BPSM 400/BENS 403: CUSTOMER CARE & PUBLIC RELATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BPLM 411,BPLM 411/410: E-PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BPLM 413,OPERATIONS IN PURCHASING & SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BPLM 415,PORT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BPLM 421,INVESTMENT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,1
-BPLM 425,BPSM/BPLM 425: TRANSPORT ECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,1,0
-BEEM 410,INFORMATION MANAGEMENT IN SMALL BUSINESSES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BEEM 428,BUSINESS CONSULTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BEEM 436,CORPORATE ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BEEM 442,RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BPLM 400,"BPLM 400,BPLM 401,BENS 403: CUSTOMER CARE AND PUBLIC RELATIONS",Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BPLM 404,OPERATIONS IN PURCHASING & SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BPLM 410,PURCHASING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
-BPLM 412,ETHICS IN PURCHASING AND SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BPLM 414,SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BPLM 422,PRINCIPLES OF AUDITING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,1
-BPLM 450,RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (B.Com.),Year 4,2,0
+BLAW 111,LEGAL SYSTEMS AND LEGAL METHODS,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,0
+BLAW 115,LEGAL RESEARCH AND WRITING,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,0
+BLAW 121,CONSTITUTIONAL LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,1
+BLAW 123,LEGAL AND LEGISLATIVE DRAFTING,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,1,1
+BLAW 112,LEGAL COMMUNICATION SKILLS,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,0
+BLAW 114,SOCIAL FOUNDATIONS OF LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,0
+BLAW 122,– PROFESSIONAL ETHICS & PRACTICE,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
+BLAW 124,CRIMINOLOGY AND PENOLOGY,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
+BLAW 126,LAW OF TORTS,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 1,2,1
+BLAW 213,ADMINISTRATIVE LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
+BLAW 215,LAND LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
+BLAW 221,CRIMINAL LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
+BLAW 223,LAW OF BUSINESS ASSOCIATIONS II,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
+BLAW 225,THE LAW OF PROPERTY,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,1
+BLAWS 211,INTRODUCTION TO NATURAL RESOURCES MANAGEMENT AND ENVIRONMENTAL LAW STREAMS: BLAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,1,0
+BLAW 214,COMMERCIAL LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,0
+BLAW 216,LAW OF BUSINESS ASSOCIATIONS I,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,0
+BLAW 224,AGRICULTURE LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 2,2,1
+BLAW 311,CRIMINAL PROCEDURE,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
+BLAW 313,ENVIRONMENTAL LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
+BLAW 315,LABOUR LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,1,0
+BLAW 314,– ALTERNATIVE DISPUTE RESOLUTION,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
+BLAW 316,– COMPETITION LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
+BLAW 318,BANKING LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 3,2,0
+BLAW 411,JURISPRUDENCE,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 4,1,0
+BLAW 424,PUBLIC PROCUREMENT LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 4,2,1
+BLAW 426,CONSUMER PROTECTION LAW,School of Law,School of Law,Bachelor,Bachelor of Laws (LLB),Year 4,2,1
+BEEM 111,BEEM 111/FOST 466/BCOP 402: PRINCIPLES OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BEEM 113,INTERNATIONAL DIMENSIONS OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BEEM 121,INTRODUCTION TO BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,0
+BPLM 101,BPLM 101/ECON 100: INTRODUCTION TO ECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,0
+BPLM 111,INTRODUCTION TO PROCUREMENT AND LOGISTICS  MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BPLM 113,INTRODUCTION TO SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BPLM 115,PUBLIC PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BPLM 121,SUPPLIES AND MATERIALS MANAGEMENT I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BPLM 171,PRINCIPLES OF ACCOUNTING STREAMS: BPLM Y1S2,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,1,1
+BEEM 112,ENTERPRENEURSHIP DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,1
+BPLM 102,BPLM 102/BCOM 170/BCOM 161: BUSINESS MATHEMATICS I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BPLM 112,SUPPLIES AND MATERIALS MANAGEMENT I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BPLM 114,INTRODUCTION TO SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,1
+BPLM 116,PUBLIC PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 1,2,0
+BEEM 215,ENTREPRENEURIAL BEHAVIOUR,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BPLM 211,STORES MANAGEMENT AND STOCK CONTROL,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BPLM 213,MANAGING SUPPLY CHAIN RELATIONSHIPS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BPLM 215,INVENTORY MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BPLM 221,BCOM /BPLM 221: PRINCIPLES OF MARKETING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BPLM 223,CLEARING AND FORWARDING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,1
+BPLM 271,INTERMEDIATE ACCOUNTING I,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,1,0
+BEEM 214,STRATEGIC ENTREPRENEURSHIP MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BEEM 216,FUNDAMENTALS OF ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,1
+BPLM 212,TRANSPRORT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,0
+BPLM 214,RETAIL AND MERCHANDISE MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,1
+BPLM 216,PURCHASING POLICY AND STRATEGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 2,2,1
+BEEM 323,INTERNATIONAL MARKETING FOR SMALL BUSINESS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,0
+BEEM 325,MANAGEMENT OF ENTREPRENEURIAL VENTURES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BEEM 331,HIGH TECHNOLOGY VENTURES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,0
+BPLM 311,SYSTEMS PRODUCTION MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,0
+BPLM 313,PROCUREMENT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BPLM 315,PROCUREMENT LAW,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BPLM 321,/ BPSM 402: FINANCIAL MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,0
+BPLM 325,PROCUREMENT RECORDS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,1
+BPLM 361,PROJECT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,1,0
+BEEM 322,TECHNOLOGY AND INNOVATION MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,0
+BEEM 324,SMALL BUSINESS FINANCING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,0
+BEEM 332,ENTREPRENEURSHIP AND ECONOMIC DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,0
+BEEM 334,SOCIAL ENTREPRENEURSH IP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BPLM 302,BPLM 302/AGBM 404/BCOM 202: BUSINESS LAW,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,0
+BPLM 312,SUSTAINABLE SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BPLM 314,INTERNATIONAL PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,1
+BPLM 324,LOGISTICS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 3,2,0
+BEEM 401,BEEM 401/BEEM 335: ENTREPRENEURSHIP SKILLS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BEEM 403,ELECTRONIC COMMERCE,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BEEM 427,FAMILY BUSINESS MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BEEM 429,BUSINESS PLANNING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BEEM 435,ENTERPRISE PROMOTION,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BEEM 437,SMALL BUSINESS POLICY AND STRATEGY DEVELOPMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BPLM 401,BPLM 401/BPSM 400/BENS 403: CUSTOMER CARE & PUBLIC RELATIONS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BPLM 411,BPLM 411/410: E-PROCUREMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BPLM 413,OPERATIONS IN PURCHASING & SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BPLM 415,PORT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BPLM 421,INVESTMENT MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,1
+BPLM 425,BPSM/BPLM 425: TRANSPORT ECONOMICS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,1,0
+BEEM 410,INFORMATION MANAGEMENT IN SMALL BUSINESSES,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BEEM 428,BUSINESS CONSULTING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BEEM 436,CORPORATE ENTREPRENEURSHIP,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BEEM 442,RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BPLM 400,"BPLM 400,BPLM 401,BENS 403: CUSTOMER CARE AND PUBLIC RELATIONS",Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BPLM 404,OPERATIONS IN PURCHASING & SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BPLM 410,PURCHASING INFORMATION SYSTEMS,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
+BPLM 412,ETHICS IN PURCHASING AND SUPPLIES MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BPLM 414,SUPPLY CHAIN MANAGEMENT,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BPLM 422,PRINCIPLES OF AUDITING,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,1
+BPLM 450,RESEARCH METHODOLOGY,Faculty of Business Studies,Department of Business Administration,Bachelor,Bachelor of Commerce (Accounting),Year 4,2,0
 MATH 0011,BASIC ALGEBRA,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Mathematics,Certificate/Diploma Level,1,0
 MATH 0021,BUSINESS MANAGEMENT,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Mathematics,Certificate/Diploma Level,1,0
 MATH 0121,INTRODUCTORY MATHEMATICS STREAMS: DIP COSC,Faculty of Science & Technology,Department of Physical Sciences,Bachelor,Bachelor of Science in Mathematics,Certificate/Diploma Level,1,1

@@ -19,7 +19,7 @@ def test_new_features():
     
     assistant = GraphRAGAssistant()
     profile = {
-        'program': 'Bachelor of Science in Computer Science', 
+        'program': 'Bachelor of Science (Computer Science)', 
         'year': '1', 
         'semester': '1'
     }
@@ -64,7 +64,7 @@ def test_new_features():
     else:
         print(" FAIL: History clear failed.")
 
-    # 4. Test Timetable Data Retrieval (Export Support)
+    # 4. Test Timetable Data Retrieval
     print(f"\n[4/4] Testing Timetable Export Retrieval...")
     tt_data = assistant.get_personalized_timetable(profile)
     if isinstance(tt_data, list):

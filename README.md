@@ -1,76 +1,87 @@
-# Chuka University GraphRAG Assistant 
+# Chuka University GraphRAG Assistant
 
-An intelligent, context-aware academic ecosystem designed to transform how 15,000+ Chuka University students interact with institutional data.
+**Empowering 15,000+ students with an intelligent, context-aware academic ecosystem.**
 
----
-
-## Key Features
-
-- **Personalized AI Assistant**: A hybrid RAG system combining Graph (Neo4j) and Vector (FAISS) retrieval for pinpoint accuracy.
-- **ChatGPT-Style Sidebar**: Persistent chat history with multi-session tracking, granular deletion, and seamless conversation restoration.
-- **Multi-Modal Interaction**: Support for **Voice Dictation** (STT) and **PDF Document Analysis** (e.g., fee statements, personal timetables).
-- **Matrix Timetable Generation**: Dynamic, grid-based personal schedules that map CourseUnits to real-time physical slots using Neo4j relationships.
-- **Smart Fee Calculation**: Intelligent parsing of program fee structures to provide real-time cost breakdowns for students.
-- **Exam Repository Access**: Direct, metadata-sorted links to past exam papers hosted on the official university repository.
+The Chuka University Assistant is a state-of-the-art **Hybrid RAG (Retrieval-Augmented Generation)** platform. It bridges the gap between structured institutional data (Neo4j Knowledge Graph) and unstructured academic policies (FAISS Vector Store) to provide students with a single, accurate point of truth for their university experience.
 
 ---
 
-##  How It Works: The Hybrid Architecture
+##  Vision: The Student Command Center
 
-The assistant leverages a **Dual-Layer Retrieval strategy** coordinated by the **Google Gemini 2.5 Flash** LLM:
+Our goal is to eliminate the "Information Desert" by giving every student a personalized AI counselor that understands their program, their year of study, and their daily schedule.
 
-1. **Structured Layer (Neo4j)**:
-   - Models the university hierarchy: `Faculty ➔ Department ➔ Programme ➔ CourseUnit`.
-   - Links units to `TimetableSlot` and `Room` nodes for real-time scheduling.
-2. **Unstructured Layer (FAISS)**:
-   - Vector index of the **Student Handbook**, **University Statutes**, and **Academic Policies**.
-   - Uses the `all-mpnet-base-v2` embedding model for high-fidelity semantic search.
-3. **Synthesis Engine**:
-   - Classifies user intent and routes queries to the appropriate layer.
-   - Grounded responses with zero hallucinations via strict context injection.
+### **Key Strategic Features**
+-  **Hybrid Intelligence**: Combines **Neo4j Cypher** logic for structured data (who teaches what, when, and where) with **FAISS vector search** for policy documents (Student Handbook, Statutes).
+-  **Time-Aware Conversationalist**: The assistant is contextually aware of "now." It translates queries like *"What is my schedule today?"* or *"Where is my class tomorrow?"* into precise database lookups.
+-  **Voice & Multi-Modal**: Students can dictate queries via **Speech-to-Text** or upload PDF documents (fee statements, personal timetables) for instant AI analysis.
+-  **Personalized Sidebar**: A "ChatGPT-style" interface that persists session history, generates on-the-fly PDF timetables, and manages academic identities.
+-  **Examination & Community Hub**: Direct integration with the university repository, providing instant links to past papers and community-curated study resources.
+
+---
+
+##  The Hybrid Engine: How it Works
+
+The platform operates on a **Dual-Layer Retrieval** strategy orchestrated by **Google Gemini 2.5 Flash**:
+
+1. **The Knowledge Graph (Neo4j)**:
+   - Maps the university from the top down: `Faculty ➔ Department ➔ Programme ➔ CourseUnit`.
+   - Connects units to `TimetableSlot` and `Room` nodes for real-time schedule resolution.
+   - Links `CourseUnit` to `PastPaper` and `RepositoryItem` for resource discovery.
+
+2. **The Vector Store (FAISS)**:
+   - Indexes unstructured documents using the `all-mpnet-base-v2` embedding model.
+   - Allows students to query the **Student Handbook** as if they were talking to an expert.
+
+3. **Autonomous Synthesis**:
+   - The system classifies student intent and extracts academic entities (course codes, semesters, years) with regex-enhanced LLM logic.
+   - Responses are **strictly grounded**; if the data isn't in the graph or the vector store, the AI will not hallucinate.
 
 ---
 
 ##  Project Structure
 
-- `app.py`: High-fidelity Streamlit interface with dark-mode sidebar and integrated chat input.
-- `src/chuka_graphrag_pipeline.py`: The core LLM orchestration engine with `tenacity` retry logic and modular Cypher handlers.
-- `src/ingest_timetable.py`: Unified dual-mode ingestion tool for mapping CSV schedules to the Graph.
-- `src/database.py`: Persistent user state management via PostgreSQL with SQLAlchemy connection pooling.
-- `src/pdf_handler.py`: Specialized parser for Chuka-formatted academic documents.
+- `app.py`: The high-fidelity Streamlit interface with premium custom CSS and side-panel persistent history.
+- `src/chuka_graphrag_pipeline.py`: The "Heart" of the system. Manages intent classification, entity extraction, and multi-source retrieval.
+- `src/ingest_all.py`: The Master Orchestrator. A dependency-safe tool that populates the entire graph in 5 automated steps.
+- `src/database.py`: PostgreSQL backend for managing multi-session chat history and user state.
+- `src/pdf_handler.py`: Specialized Chuka-native document parser for student-uploaded PDFs.
 
 ---
 
 ##  Getting Started
 
-### 1. Installation
+### 1. Installation & Environment
 ```bash
+# Clone the repository and install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Database Setup
-- Ensure a **Neo4j AuraDB** (or local) instance is running.
-- Ensure a **PostgreSQL** instance is available for chat history persistence.
-- Configure your `.env` file with the following keys:
-  ```env
-  GEMINI_API_KEY=your_gemini_key
-  NEO4J_URI=bolt://...
-  NEO4J_USERNAME=neo4j
-  NEO4J_PASSWORD=your_password
-  DATABASE_URL=postgresql://...
-  ```
-
-### 3. Data Ingestion
-Map the latest university timetable to the Knowledge Graph:
-```bash
-# Full wipe and re-ingest (for fresh semesters)
-python src/ingest_timetable.py --mode full
-
-# Incremental gap-fill (only map missing units)
-python src/ingest_timetable.py --mode incremental
+Configure your `.env` with your API keys and credentials:
+```env
+GEMINI_API_KEY=your_key
+NEO4J_URI=bolt://...
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your_password
+DATABASE_URL=postgresql://...
 ```
 
-### 4. Run the Application
+### 2. The Ingestion Workflow (Master Orchestrator)
+Populate your Knowledge Graph with the specialized university dataset:
+```bash
+# Full automated ingestion with database wipe
+python src/ingest_all.py --wipe
+
+# Or run specific steps (e.g., only update past papers)
+python src/ingest_all.py --steps 3
+```
+
+### 3. Build the Vector Index
+```bash
+# Create the semantic index for handbooks and policies
+python src/build_faiss_index.py
+```
+
+### 4. Launch the Assistant
 ```bash
 streamlit run app.py
 ```
@@ -78,14 +89,20 @@ streamlit run app.py
 ---
 
 ##  Tech Stack
-- **LLM**: Google Gemini 2.5 Flash
-- **Knowledge Graph**: Neo4j (Cypher)
-- **Vector DB**: FAISS
-- **Backend**: Python 3.10, SQLAlchemy, PostgreSQL
-- **Frontend**: Streamlit (Premium Custom CSS)
-- **Document Processing**: PyPDF2, pdfplumber
+-   **LLM**: Google Gemini 2.5 Flash (Synthesizer & Intent Engine)
+-   **Knowledge Graph**: Neo4j Aura (Relationship Modeling)
+-   **Vector Search**: FAISS (SentenceTransformer Embeddings)
+-   **Persistence**: PostgreSQL (SQLAlchemy)
+-   **Interface**: Streamlit 
+-   **PDF Engine**: ReportLab (Generation), PDFPlumber (Extraction)
 
 ---
 
-## Authors
+##  Data Coverage Notice
+> [!IMPORTANT]
+> Currently, the **Timetable Coverage** stands at approximately **22%** for unique units in the curriculum. While the system understands all 900+ course units, specific "Time and Room" data is limited by the current source `timetable.csv`. The assistant handles these data gaps gracefully by providing unit descriptions when schedules are unavailable.
+
+---
+
+## Author
 **Dancun Mau Wainaina**

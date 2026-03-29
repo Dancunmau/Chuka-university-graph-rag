@@ -1,0 +1,3 @@
+Curr: 1891
+TT: 1889
+Overlap: 609
