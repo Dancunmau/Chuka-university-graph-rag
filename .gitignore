@@ -37,6 +37,8 @@ data/*.pkl
 data/*.csv
 !data/course_catalogue.csv
 !data/curricular_mapping.csv
+!data/faiss_index.bin
+!data/faiss_metadata.pkl
 
 # IDEs
 .vscode/

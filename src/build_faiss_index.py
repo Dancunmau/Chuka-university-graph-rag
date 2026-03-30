@@ -21,13 +21,13 @@ except ImportError:
     import pdfplumber
     from sentence_transformers import SentenceTransformer
 
-BASE = 'd:/Jupyter notebook/Graph rag'
-HANDBOOK_PATH = f'{BASE}/reports/Student-handbook-August-2024.docx.pdf'
-ADVERT_PATH    = f'{BASE}/reports/CU-Advert-Jan-2024.pdf'
-TIMETABLE_PDF  = f'{BASE}/reports/1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf'
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HANDBOOK_PATH = os.path.join(BASE, 'reports', 'Student-handbook-August-2024.docx - Copy.pdf')
+ADVERT_PATH    = os.path.join(BASE, 'reports', 'CU-Advert-Jan-2024.pdf')
+TIMETABLE_PDF  = os.path.join(BASE, 'reports', '1st-Draft-Teaching-TT-Jan-April.-2026._compressed-1.pdf')
 
-FAISS_INDEX_PATH = f'{BASE}/faiss_index.bin'
-METADATA_PATH    = f'{BASE}/faiss_metadata.pkl'
+FAISS_INDEX_PATH = os.path.join(BASE, 'data', 'faiss_index.bin')
+METADATA_PATH    = os.path.join(BASE, 'data', 'faiss_metadata.pkl')
 
 def clean_text(text):
     if not text: return ""
