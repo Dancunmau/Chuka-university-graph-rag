@@ -89,7 +89,7 @@ streamlit run app.py
 ---
 
 ##  Tech Stack
--   **LLM**: Google Gemini 2.5 Flash (Synthesizer & Intent Engine)
+-   **LLM**: Google Gemini 2.0 Flash (Synthesizer & Intent Engine)
 -   **Knowledge Graph**: Neo4j Aura (Relationship Modeling)
 -   **Vector Search**: FAISS (SentenceTransformer Embeddings)
 -   **Persistence**: PostgreSQL (SQLAlchemy)
