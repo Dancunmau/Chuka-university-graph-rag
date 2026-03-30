@@ -6,6 +6,20 @@ ROOT = get_project_root()
 PROGRAMS_CSV = ROOT / "data" / "programs_linked.csv"
 
 # Ingest Faculty -> Department -> Program hierarchy
+ALIASES = {
+    "M.Ed.": "Master of Education",
+    "B.Sc.": "Bachelor of Science",
+    "B.A.": "Bachelor of Arts",
+    "B.Com.": "Bachelor of Commerce",
+}
+
+def normalize_prog(name):
+    """Normalize program names to their full versions."""
+    for alias, full in ALIASES.items():
+        if alias.lower() in name.lower():
+            return name.replace(alias, full)
+    return name
+
 MERGE_QUERY = """
 UNWIND $data AS row
 MERGE (f:Faculty {name: row.faculty})
@@ -29,7 +43,7 @@ def load_data():
 
     rows = []
     for _, r in df.iterrows():
-        name = tc(str(r.get("name", "")).strip())
+        name = tc(normalize_prog(str(r.get("name", "")).strip()))
         faculty = tc(str(r.get("faculty", "")).strip())
         dept = tc(str(r.get("department", "")).strip())
         
