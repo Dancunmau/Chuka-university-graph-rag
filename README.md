@@ -21,7 +21,7 @@ Our goal is to eliminate the "Information Desert" by giving every student a pers
 
 ##  The Hybrid Engine: How it Works
 
-The platform operates on a **Dual-Layer Retrieval** strategy orchestrated by **Google Gemini 2.5 Flash**:
+The platform operates on a **Dual-Layer Retrieval** strategy orchestrated by **Google Gemini 2.0 Flash**:
 
 1. **The Knowledge Graph (Neo4j)**:
    - Maps the university from the top down: `Faculty ➔ Department ➔ Programme ➔ CourseUnit`.

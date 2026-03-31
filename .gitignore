@@ -44,5 +44,5 @@ data/*.csv
 .vscode/
 .idea/
 
-# Streamlit
-.streamlit/
+# Streamlit (config.toml is intentionally tracked for Streamlit Cloud theme)
+# .streamlit/
