@@ -356,10 +356,6 @@ def course_explorer_view():
     try:
         df = load_data()
         mapped_progs = st.session_state.get('mapped_programmes', [])
-        if mapped_progs:
-            mapped_names = [p['name'] for p in mapped_progs]
-            df = df[df['programme'].isin(mapped_names)]
-        
         col1, col2, col3 = st.columns(3)
         with col1:
             faculties = ["All"] + sorted(df['faculty'].unique().tolist())
@@ -403,11 +399,27 @@ def course_explorer_view():
         if sel_prog != "All":
             filtered_df = filtered_df[filtered_df['programme'] == sel_prog]
             
-        st.markdown(f"**Showing {len(filtered_df)} units**")
+        # Metric Cards
+        st.markdown("<br>", unsafe_allow_html=True)
+        m1, m2, m3 = st.columns(3)
+        m1.metric("📚 Total Units Found", len(filtered_df))
+        m2.metric("🏛️ Faculties", len(filtered_df['faculty'].unique()))
+        m3.metric("🎓 Programmes", len(filtered_df['programme'].unique()))
+        st.markdown("<hr style='border-color:#e2e8f0; margin-top: 10px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+        
+        # Dataframe
         st.dataframe(
             filtered_df[['course_code', 'course_name', 'department', 'Academic_Level', 'semester', 'year']], 
             use_container_width=True, 
-            hide_index=True
+            hide_index=True,
+            column_config={
+                "course_code": st.column_config.TextColumn("Unit Code", width="small"),
+                "course_name": st.column_config.TextColumn("Unit Title", width="medium"),
+                "department": st.column_config.TextColumn("Department", width="medium"),
+                "Academic_Level": "Level",
+                "semester": st.column_config.NumberColumn("Sem", format="%d"),
+                "year": st.column_config.NumberColumn("Year", format="%d")
+            }
         )
     except Exception as e:
         st.error(f"Could not load course data: {e}")
