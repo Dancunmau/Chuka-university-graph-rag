@@ -95,7 +95,7 @@ def _gemini_call(prompt_or_contents, model_name=None, stream=False):
                     if len(GEMINI_KEYS) > 1:
                         current_key_idx = (current_key_idx + 1) % len(GEMINI_KEYS)
                 #trigger Tenacity retry so it starts over with the primary model on the new key
-                raise Exception("Quota exceeded, key rotated. Retrying from top")
+                raise Exception("The University AI is experiencing exceptionally high traffic. Please wait a few seconds and try your request again.")
             elif "503" in err:
                 log.warning(f"Model {m_name} failed. Attempting next model")
                 continue # Try next model name in the fallback cascade
