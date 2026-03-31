@@ -153,7 +153,7 @@ def log_chat_history(user_id, session_id, query_text, response_text):
         db.add(chat)
         db.commit()
         db.refresh(chat)
-        return chat.id
+        return chat.history_id
     finally:
         db.close()
 
@@ -161,7 +161,7 @@ def update_chat_feedback(history_id, feedback_value):
     """Store the user feedback vote (0 or 1) for a specific chat row."""
     db = SessionLocal()
     try:
-        chat = db.query(History).filter(History.id == history_id).first()
+        chat = db.query(History).filter(History.history_id == history_id).first()
         if chat:
             chat.feedback = feedback_value
             db.commit()

@@ -273,7 +273,7 @@ if "chat_history" not in st.session_state:
     for r in rows:
         st.session_state.chat_history += [
             {"role": "user", "content": r.query_text},
-            {"role": "assistant", "content": r.response_text, "id": r.id, "feedback": r.feedback},
+            {"role": "assistant", "content": r.response_text, "id": r.history_id, "feedback": r.feedback},
         ]
 
 if "extra_context" not in st.session_state:
