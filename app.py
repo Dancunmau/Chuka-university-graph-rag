@@ -10,7 +10,7 @@ import os
 import base64
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
-from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, get_user_sessions, SessionLocal, UserProfile
+from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, get_user_sessions, SessionLocal, UserProfile, update_chat_feedback
 from src.pdf_handler import parse_chuka_document
 
 @st.cache_data
@@ -273,7 +273,7 @@ if "chat_history" not in st.session_state:
     for r in rows:
         st.session_state.chat_history += [
             {"role": "user", "content": r.query_text},
-            {"role": "assistant", "content": r.response_text},
+            {"role": "assistant", "content": r.response_text, "id": r.id, "feedback": r.feedback},
         ]
 
 if "extra_context" not in st.session_state:
@@ -606,9 +606,9 @@ def main_chat():
                     Library
                 </div>
             </a>
-            <a href="https://portal.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
+            <a href="https://repository.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                    Settings
+                    Repository
                 </div>
             </a>
         </div>
@@ -663,6 +663,13 @@ def main_chat():
                                 st.markdown(f"**Neo4j Reference Data**\n\n```text\n{graph_ctx.strip()}\n```")
                 else:
                     st.markdown(content)
+                    
+                # Render thumbs up/down
+                if msg["role"] == "assistant" and "id" in msg:
+                    fb_key = f"fb_{msg['id']}"
+                    if fb_key not in st.session_state and msg.get("feedback") is not None:
+                        st.session_state[fb_key] = msg["feedback"]
+                    st.feedback("thumbs", key=fb_key, on_change=lambda mid=msg['id'], k=fb_key: update_chat_feedback(mid, st.session_state[k]))
                 
         # Access the globally cached assistant
         assistant = get_assistant()
@@ -784,8 +791,8 @@ def main_chat():
                             response = f"Sorry, I ran into an error: {e}"
                         st.markdown(response)
 
-            st.session_state.chat_history.append({"role": "assistant", "content": response})
-            log_chat_history(st.session_state.user_id, st.session_state.current_session_id, final_prompt, response)
+            msg_id = log_chat_history(st.session_state.user_id, st.session_state.current_session_id, final_prompt, response)
+            st.session_state.chat_history.append({"role": "assistant", "content": response, "id": msg_id, "feedback": None})
             st.rerun()
 
 # Router

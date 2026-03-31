@@ -62,6 +62,7 @@ class History(Base):
     session_id = Column(String(100), index=True, nullable=True)
     query_text = Column(Text)
     response_text = Column(Text)
+    feedback = Column(Integer, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="history")
@@ -86,6 +87,14 @@ try:
         conn.commit()
 except Exception:
     pass 
+
+# Migration: Provision 'feedback' column for upvote/downvote tracking.
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE history ADD COLUMN feedback INTEGER"))
+        conn.commit()
+except Exception:
+    pass
 
 # Data Access Objects (DAOs)
 def get_or_create_user(device_token=None):
@@ -143,6 +152,19 @@ def log_chat_history(user_id, session_id, query_text, response_text):
         )
         db.add(chat)
         db.commit()
+        db.refresh(chat)
+        return chat.id
+    finally:
+        db.close()
+
+def update_chat_feedback(history_id, feedback_value):
+    """Store the user feedback vote (0 or 1) for a specific chat row."""
+    db = SessionLocal()
+    try:
+        chat = db.query(History).filter(History.id == history_id).first()
+        if chat:
+            chat.feedback = feedback_value
+            db.commit()
     finally:
         db.close()
 
