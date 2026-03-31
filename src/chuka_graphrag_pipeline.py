@@ -64,10 +64,11 @@ key_lock = threading.Lock()
 FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"]
 
 @retry(wait=wait_exponential(multiplier=1, min=2, max=10), stop=stop_after_attempt(5))
-def _gemini_call(prompt_or_contents, model_name=None) -> str:
+def _gemini_call(prompt_or_contents, model_name=None, stream=False):
     """
     Call Gemini with back-off via tenacity,
     cascading model fallbacks, and thread-safe key rotation.
+    Returns string if stream=False, or the response object if stream=True.
     """
     global current_key_idx
     
@@ -81,7 +82,9 @@ def _gemini_call(prompt_or_contents, model_name=None) -> str:
                 
             genai.configure(api_key=key_to_use)
             model = genai.GenerativeModel(m_name)
-            response = model.generate_content(prompt_or_contents)
+            response = model.generate_content(prompt_or_contents, stream=stream)
+            if stream:
+                return response
             return response.text.strip()
             
         except Exception as e:
@@ -493,7 +496,7 @@ def retrieve_from_faiss(query: str, index, metadata: list, embedder, k=8) -> str
 
 
 # LLM Synthesis
-def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "") -> str:
+def synthesise_response(query: str, graph_ctx: str, faiss_ctx: str, profile: dict, extra_ctx: str = "", stream: bool = False):
     """Synthesise a grounded response using retrieved data."""
     profile_str = json.dumps(profile or {})
     context = ""
@@ -532,7 +535,7 @@ Instructions:
 
 Response:"""
 
-    answer = _gemini_call(prompt)
+    answer = _gemini_call(prompt, stream=stream)
     if answer:
         return answer
 
@@ -624,6 +627,11 @@ class GraphRAGAssistant:
 
     def generate_response(self, query: str, user_profile: dict, extra_context: str = "") -> str:
         """The main pipeline entry point."""
+        gen = self.generate_response_stream(query, user_profile, extra_context)
+        return "".join(list(gen))
+
+    def generate_response_stream(self, query: str, user_profile: dict, extra_context: str = ""):
+        """Generator that yields text chunks continuously as Gemini streams them."""
         student_name = user_profile.get("full_name", "Student")
         
         # 1. Intent Classification
@@ -644,15 +652,24 @@ class GraphRAGAssistant:
             faiss_results = retrieve_from_faiss(query, self.faiss_index, self.faiss_meta, self.embedder)
             
         # 5. Synthesis
-        response = synthesise_response(
+        response_obj = synthesise_response(
             query, 
             graph_nodes, 
             faiss_results,
             user_profile,
-            extra_context
+            extra_context,
+            stream=True
         )
         
-        return response
+        if isinstance(response_obj, str):
+            yield response_obj
+        else:
+            for chunk in response_obj:
+                try:
+                    if chunk.text:
+                        yield chunk.text
+                except Exception as e:
+                    pass
 
     def transcribe_audio(self, audio_bytes: bytes) -> str:
         """Transcribe audio bytes using Gemini 2.5 Flash."""

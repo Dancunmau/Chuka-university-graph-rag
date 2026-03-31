@@ -655,21 +655,24 @@ def main_chat():
             with st.chat_message("assistant", avatar="https://ui-avatars.com/api/?name=C&background=4B0082&color=fff&rounded=true"):
                 with st.spinner(""):
                     try:
-                        response = assistant.generate_response(
+                        stream_gen = assistant.generate_response_stream(
                             final_prompt,
                             st.session_state.user_profile,
                             extra_context=st.session_state.get("extra_context", "")
                         )
+                        # st.write_stream handles the typewriter effect seamlessly and returns the complete joined text
+                        response = st.write_stream(stream_gen)
                     except Exception as e:
-                        # Extract the actual exception if it's a tenacity RetryError
                         try:
-                            cause = str(e.last_attempt.exception())
-                            # Sanitize verbose gRPC metadata from Google API errors
+                            if hasattr(e, 'last_attempt') and e.last_attempt is hasattr(e.last_attempt, 'exception'):
+                                cause = str(e.last_attempt.exception())
+                            else:
+                                cause = str(e)
                             clean_cause = cause.split("[")[0].strip()
                             response = f"Sorry, the AI service encountered an error: **{clean_cause}**"
                         except Exception:
                             response = f"Sorry, I ran into an error: {e}"
-                    st.markdown(response)
+                        st.markdown(response)
 
             st.session_state.chat_history.append({"role": "assistant", "content": response})
             log_chat_history(st.session_state.user_id, st.session_state.current_session_id, final_prompt, response)
