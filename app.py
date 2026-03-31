@@ -7,6 +7,7 @@ import streamlit as st
 import uuid
 import io
 import os
+import logging
 import base64
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
@@ -434,7 +435,8 @@ def course_explorer_view():
             }
         )
     except Exception as e:
-        st.error(f"Could not load course data: {e}")
+        logging.error(f"Course Explorer error: {e}")
+        st.error("We couldn't load the course data right now. Please try again later.")
 
 # UI Components: Main Chat Interface
 def main_chat():
@@ -570,7 +572,8 @@ def main_chat():
                     use_container_width=True
                 )
             except Exception as e:
-                st.error(f"PDF Export error: {e}")
+                logging.error(f"PDF Export error: {e}")
+                st.error("We couldn't generate your PDF schedule right now. Please try again later.")
 
         # History list
         sessions = get_user_sessions(st.session_state.user_id)
@@ -780,15 +783,16 @@ def main_chat():
                             response += f"|||CONTEXT|||{graph_ctx}|||FAISS|||{faiss_ctx}"
                             
                     except Exception as e:
+                        logging.error(f"Chat error: {e}")
                         try:
-                            if hasattr(e, 'last_attempt') and e.last_attempt is hasattr(e.last_attempt, 'exception'):
+                            if hasattr(e, 'last_attempt') and hasattr(e.last_attempt, 'exception'):
                                 cause = str(e.last_attempt.exception())
                             else:
                                 cause = str(e)
                             clean_cause = cause.split("[")[0].strip()
                             response = f"Sorry, the AI service encountered an error: **{clean_cause}**"
                         except Exception:
-                            response = f"Sorry, I ran into an error: {e}"
+                            response = "Sorry, I ran into an unexpected error. Please try again later."
                         st.markdown(response)
 
             msg_id = log_chat_history(st.session_state.user_id, st.session_state.current_session_id, final_prompt, response)
