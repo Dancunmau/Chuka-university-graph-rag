@@ -601,14 +601,14 @@ def main_chat():
         st.markdown("""
         <div style="margin-top:auto;padding:20px 0 0 0;">
             <hr style="border-color:#2e3650;margin-bottom:12px;">
-            <a href="https://repository.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
+            <a href="https://library.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                    📚 University Library
+                    Library
                 </div>
             </a>
             <a href="https://portal.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
                 <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                    🎓 Student Portal
+                    Settings
                 </div>
             </a>
         </div>
