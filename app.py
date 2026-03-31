@@ -633,7 +633,37 @@ def main_chat():
         # Access the globally cached assistant
         assistant = get_assistant()
 
-        #CHAT INPUT WITH FILE/AUDIO 
+        # Quick Welcome Prompts for Empty Chat
+        if not st.session_state.chat_history:
+            profile = st.session_state.user_profile
+            prog = profile.get('program', 'your program')
+            
+            st.markdown(f"""
+            <div style="text-align:center; padding: 20px 0 30px 0;">
+                <h3 style="color:#1e293b; font-weight:600;">Welcome to your Academic Assistant</h3>
+                <p style="color:#64748b; font-size: 0.95em;">I'm here to help you navigate {prog}. Choose a quick action or type a message below.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            p_col1, p_col2 = st.columns(2)
+            with p_col1:
+                if st.button("📅 What is my schedule tomorrow?", use_container_width=True, key="p1"):
+                    st.session_state.triggered_prompt = "What is my schedule tomorrow?"
+                    st.rerun()
+                if st.button("💰 Track my program fees", use_container_width=True, key="p2"):
+                    st.session_state.triggered_prompt = "What are the fee structures for my program?"
+                    st.rerun()
+            with p_col2:
+                if st.button("📚 Show my course units", use_container_width=True, key="p3"):
+                    st.session_state.triggered_prompt = "Show me my course units for this semester"
+                    st.rerun()
+                if st.button("📜 Handbook exam rules", use_container_width=True, key="p4"):
+                    st.session_state.triggered_prompt = "What are the examination rules and regulations?"
+                    st.rerun()
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # CHAT INPUT WITH FILE/AUDIO 
 
         prompt = st.chat_input(
             "Ask the University Assistant...", 
@@ -641,15 +671,19 @@ def main_chat():
             accept_audio=True
         )
 
+        final_prompt = ""
+        has_media = False
+        
         if prompt:
-            final_prompt = ""
-            
-            # Handle text input
+            # Handle text input natively from chat bar
             if getattr(prompt, "text", None):
                 final_prompt = prompt.text
-            
+            elif isinstance(prompt, str):
+                final_prompt = prompt
+                
             # Handle audio upload
             if getattr(prompt, "audio", None):
+                has_media = True
                 with st.spinner("Transcribing audio..."):
                     audio_transcription = assistant.transcribe_audio(prompt.audio.read())
                     if audio_transcription:
@@ -660,16 +694,23 @@ def main_chat():
             
             # Handle file upload
             if getattr(prompt, "files", None) and len(prompt.files) > 0:
+                has_media = True
                 with st.spinner(f"Processing document {prompt.files[0].name}..."):
+                    from src.pdf_handler import parse_chuka_document
                     context = parse_chuka_document(prompt.files[0].name, prompt.files[0].read())
                     st.session_state.extra_context = context
                     st.session_state.uploaded_file_name = prompt.files[0].name
                     st.success(f"Loaded: {prompt.files[0].name}")
                     
-            if final_prompt:
-                st.session_state.chat_history.append({"role": "user", "content": final_prompt})
-                with st.chat_message("user", avatar="https://ui-avatars.com/api/?name=U&background=6c757d&color=fff&rounded=true"):
-                    st.markdown(final_prompt)
+        # Intercept Quick Prompts from buttons
+        if st.session_state.get("triggered_prompt"):
+            final_prompt = st.session_state.triggered_prompt
+            del st.session_state["triggered_prompt"]
+            
+        if final_prompt or has_media:
+            st.session_state.chat_history.append({"role": "user", "content": final_prompt})
+            with st.chat_message("user", avatar="https://ui-avatars.com/api/?name=U&background=6c757d&color=fff&rounded=true"):
+                st.markdown(final_prompt)
 
             with st.chat_message("assistant", avatar="https://ui-avatars.com/api/?name=C&background=4B0082&color=fff&rounded=true"):
                 with st.spinner(""):
