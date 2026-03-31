@@ -452,6 +452,21 @@ def main_chat():
     # SIDEBAR 
     with st.sidebar:
         st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Student Profile ID Card
+        profile = st.session_state.user_profile
+        prog_name = profile['program'] if len(profile['program']) < 35 else profile['program'][:32] + "..."
+        st.markdown(f"""
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+            <div style="font-size: 0.75em; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px;">Student Profile</div>
+            <div style="color: #f1f5f9; font-weight: 500; font-size: 0.9em; line-height: 1.3; margin-bottom: 8px;">{prog_name}</div>
+            <div style="display: flex; gap: 8px; font-size: 0.8em; color: #cbd5e1;">
+                <span style="background: #334155; padding: 2px 8px; border-radius: 4px;">Year {profile['year']}</span>
+                <span style="background: #334155; padding: 2px 8px; border-radius: 4px;">Sem {profile['semester']}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         if st.button("＋  New Chat", use_container_width=True, key="new_chat"):
             st.session_state.current_session_id = str(uuid.uuid4())
             st.session_state.chat_history = []
@@ -586,12 +601,16 @@ def main_chat():
         st.markdown("""
         <div style="margin-top:auto;padding:20px 0 0 0;">
             <hr style="border-color:#2e3650;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                Library
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
-                Settings
-            </div>
+            <a href="https://repository.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
+                    📚 University Library
+                </div>
+            </a>
+            <a href="https://portal.chuka.ac.ke/" target="_blank" style="text-decoration:none; color:#c9d1e0;">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.9em;cursor:pointer;">
+                    🎓 Student Portal
+                </div>
+            </a>
         </div>
         """, unsafe_allow_html=True)
 
