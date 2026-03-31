@@ -81,12 +81,21 @@ python src/ingest_all.py --steps 3
 python src/build_faiss_index.py
 ```
 
-### 4. Launch the Assistant
+### 4. Launch the Assistant Locally
 ```bash
 streamlit run app.py
 ```
 
+### 5. Cloud Deployment (Streamlit Cloud)
+The app is fully configured for deployment on Streamlit Cloud.
+1. Push your repository to GitHub (ensure `.streamlit/config.toml`, `data/faiss_index.bin`, and `faiss_metadata.pkl` are tracked).
+2. Connect your repository to [Streamlit Cloud](https://share.streamlit.io/).
+3. Set the Main file path to `app.py`.
+4. In Advanced Settings > Secrets, add your environment variables matching your `.env` file (e.g. `GEMINI_API_KEY`, `NEO4J_URI`, `DATABASE_URL`, etc.). DO NOT commit your `.env` file to GitHub.
+5. Deploy. Streamlit Cloud defaults to Python 3.11/3.12, which is fully compatible with this project.
+
 ---
+
 
 ##  Tech Stack
 -   **LLM**: Google Gemini 2.0 Flash (Synthesizer & Intent Engine)
