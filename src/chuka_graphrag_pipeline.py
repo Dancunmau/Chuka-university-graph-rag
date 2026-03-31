@@ -630,7 +630,7 @@ class GraphRAGAssistant:
         gen = self.generate_response_stream(query, user_profile, extra_context)
         return "".join(list(gen))
 
-    def generate_response_stream(self, query: str, user_profile: dict, extra_context: str = ""):
+    def generate_response_stream(self, query: str, user_profile: dict, extra_context: str = "", context_container: dict = None):
         """Generator that yields text chunks continuously as Gemini streams them."""
         student_name = user_profile.get("full_name", "Student")
         
@@ -650,6 +650,10 @@ class GraphRAGAssistant:
         faiss_results = ""
         if FAISS_AVAILABLE:
             faiss_results = retrieve_from_faiss(query, self.faiss_index, self.faiss_meta, self.embedder)
+            
+        if context_container is not None:
+            context_container["graph_nodes"] = graph_nodes
+            context_container["faiss_results"] = faiss_results
             
         # 5. Synthesis
         response_obj = synthesise_response(

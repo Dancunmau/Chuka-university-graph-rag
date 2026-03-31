@@ -609,7 +609,26 @@ def main_chat():
             else:
                 avatar = "https://ui-avatars.com/api/?name=U&background=6c757d&color=fff&rounded=true"
             with st.chat_message(msg["role"], avatar=avatar):
-                st.markdown(msg["content"])
+                content = msg["content"]
+                if msg["role"] == "assistant" and "|||CONTEXT|||" in content:
+                    main_text, ctx_str = content.split("|||CONTEXT|||", 1)
+                    st.markdown(main_text)
+                    
+                    graph_ctx = ""
+                    faiss_ctx = ""
+                    if "|||FAISS|||" in ctx_str:
+                        graph_ctx, faiss_ctx = ctx_str.split("|||FAISS|||", 1)
+                    else:
+                        graph_ctx = ctx_str
+                        
+                    if graph_ctx.strip() or faiss_ctx.strip():
+                        with st.expander("Sources & Database Records Used"):
+                            if faiss_ctx.strip():
+                                st.markdown(f"**Policy / Handbook Context**\n\n```text\n{faiss_ctx.strip()}\n```")
+                            if graph_ctx.strip():
+                                st.markdown(f"**Neo4j Reference Data**\n\n```text\n{graph_ctx.strip()}\n```")
+                else:
+                    st.markdown(content)
                 
         # Access the globally cached assistant
         assistant = get_assistant()
@@ -655,13 +674,29 @@ def main_chat():
             with st.chat_message("assistant", avatar="https://ui-avatars.com/api/?name=C&background=4B0082&color=fff&rounded=true"):
                 with st.spinner(""):
                     try:
+                        ctx_container = {}
                         stream_gen = assistant.generate_response_stream(
                             final_prompt,
                             st.session_state.user_profile,
-                            extra_context=st.session_state.get("extra_context", "")
+                            extra_context=st.session_state.get("extra_context", ""),
+                            context_container=ctx_container
                         )
                         # st.write_stream handles the typewriter effect seamlessly and returns the complete joined text
                         response = st.write_stream(stream_gen)
+                        
+                        graph_ctx = ctx_container.get("graph_nodes", "")
+                        faiss_ctx = ctx_container.get("faiss_results", "")
+                        
+                        if graph_ctx.strip() or faiss_ctx.strip():
+                            with st.expander("Sources & Database Records Used"):
+                                if faiss_ctx.strip():
+                                    st.markdown(f"**Policy / Handbook Context**\n\n```text\n{faiss_ctx.strip()}\n```")
+                                if graph_ctx.strip():
+                                    st.markdown(f"**Neo4j Reference Data**\n\n```text\n{graph_ctx.strip()}\n```")
+                                    
+                            # Append implicitly to save to history without double printing
+                            response += f"|||CONTEXT|||{graph_ctx}|||FAISS|||{faiss_ctx}"
+                            
                     except Exception as e:
                         try:
                             if hasattr(e, 'last_attempt') and e.last_attempt is hasattr(e.last_attempt, 'exception'):
