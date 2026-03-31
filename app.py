@@ -6,10 +6,21 @@ Manages the chat interface, session states, and PDF/Voice uploads.
 import streamlit as st
 import uuid
 import io
+import os
+import base64
 import pandas as pd
 from src.chuka_graphrag_pipeline import GraphRAGAssistant
 from src.database import get_or_create_user, save_user_profile, log_chat_history, get_chat_history, clear_chat_history, get_user_sessions, SessionLocal, UserProfile
 from src.pdf_handler import parse_chuka_document
+
+@st.cache_data
+def get_base64_image(image_file="download.jpeg"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base_dir, image_file)
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+    return ""
 
 st.set_page_config(
     page_title="Chuka University Assistant",
@@ -276,11 +287,12 @@ def onboarding_screen():
     """Initial screening to capture academic context used to filter Cypher queries."""
     _, col, _ = st.columns([1, 2.5, 1])
     with col:
-        st.markdown("""
-        <div style="text-align:center;margin-bottom:20px;margin-top:40px;">
-            <div style="display:inline-flex;align-items:center;justify-content:center;
-                        background:linear-gradient(135deg,#000000,#333333);
-                        color:white;font-size:2em;margin-bottom:14px;"></div>
+        logo_b64 = get_base64_image("download.jpeg")
+        logo_html = f'<img src="data:image/jpeg;base64,{logo_b64}" style="width:110px; max-height:110px; margin-bottom:15px; border-radius:8px; object-fit:contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">' if logo_b64 else '<div style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#000000,#333333);color:white;font-size:2em;margin-bottom:14px;width:100px;height:100px;border-radius:10px;"></div>'
+
+        st.markdown(f"""
+        <div style="text-align:center;margin-bottom:20px;margin-top:20px;">
+            {logo_html}
             <h2 style="color:#000000;font-weight:700;margin:0 0 4px;">Chuka University</h2>
             <p style="color:#64748b;font-size:0.9em;margin:0 0 28px;">Academic Assistant</p>
         </div>
@@ -593,10 +605,13 @@ def main_chat():
         course_explorer_view()
     else:
         # Header
-        st.markdown("""
+        logo_b64 = get_base64_image("download.jpeg")
+        header_icon = f'<img src="data:image/jpeg;base64,{logo_b64}" style="width:100%; height:100%; object-fit:contain; border-radius: 5px;">' if logo_b64 else '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
+
+        st.markdown(f"""
             <div class="custom-header">
-                <div class="header-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <div class="header-icon" style="background:transparent; padding:0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {header_icon}
                 </div>
                 <div class="header-title">AI Assistant</div>
             </div>
