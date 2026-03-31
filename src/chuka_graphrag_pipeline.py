@@ -107,70 +107,56 @@ def _gemini_call(prompt_or_contents, model_name=None, stream=False):
 
 
 # Retrieval Routing
-def classify_intent(query: str) -> str:
+def analyze_query(query: str, profile: dict) -> tuple[str, dict]:
     """
-    Returns one of: 'graph_query' | 'semantic_search' | 'hybrid'
-    - graph_query : questions about units, timetable slots, past papers by code
-    - semantic_search : policy, handbook, fee, procedure questions
-    - hybrid : mixed (e.g. 'units and their exam regulations')
-    """
-    prompt = f"""Classify the following student query to determine the best data retrieval strategy for the Chuka University assistant.
-
-Query: "{query}"
-
-Classification Rules:
-- "graph_query": The user is asking about highly structured academic data such as specific course units, timetable schedules, rooms, or past paper availability.
-- "semantic_search": The user is asking about general rules, handbook policies, fee structures, graduation procedures, or university regulations.
-- "hybrid": The user's query requires both structured database lookup AND general handbook context (e.g., "What are the exam rules for COSC 121?").
-
-You must respond with EXACTLY ONE of the following three core labels. Do not include any other text, punctuation, or explanations. 
-
-Labels: graph_query, semantic_search, hybrid"""
-
-    result = _gemini_call(prompt).strip().lower()
-    for label in ["graph_query", "semantic_search", "hybrid"]:
-        if label in result:
-            return label
-    # Default: try graph first
-    return "hybrid"
-
-
-def extract_entities(query: str, profile: dict) -> dict:
-    """
-    Extract structured entities from the query.
-    Returns dict with keys: course_code, programme, year, semester
-    Falls back to regex parse if the LLM output deviates from JSON.
+    Combined Intent Classification & Entity Extraction.
+    Returns: (intent_str, entities_dict)
     """
     now = datetime.datetime.now()
     current_day = now.strftime("%A")
     tomorrow = (now + datetime.timedelta(days=1)).strftime("%A")
 
-    prompt = f"""Extract academic entities from this Chuka University student query.
+    prompt = f"""Analyze this Chuka University student query. 
+Your goal is to classify the intent AND extract any relevant academic entities.
+
 Query: "{query}"
-Student profile: {json.dumps(profile or {{}})}
+Student profile: {json.dumps(profile or {})}
 
 Current Date Context:
 - Today is: {current_day}
 - Tomorrow is: {tomorrow}
 (Translate any relative terms like "today" or "tomorrow" in the query into their actual day of the week)
 
-Return valid JSON only, with these keys (use null if not found):
+Intent Classification Rules:
+- "graph_query": Asking about highly structured academic data (course units, timetable schedules, rooms, past paper availability).
+- "semantic_search": Asking about general rules, handbook policies, fee structures, graduation procedures, or university regulations.
+- "hybrid": Requires both structured database lookup AND general handbook context.
+
+Return ONLY a raw, perfectly formatted JSON payload. Do not use markdown syntax tags like ```json.
 {{
-  "course_code": "e.g. COSC 121 or null",
-  "programme": "e.g. Computer Science or null",
-  "year": "integer 1-6 or null",
-  "semester": "integer 1-2 or null",
-  "day": "e.g. Monday or null",
-  "topic": "general topic if no specific code, e.g. exam regulations"
+  "intent": "graph_query, semantic_search, or hybrid",
+  "entities": {{
+    "course_code": "e.g. COSC 121 or null",
+    "programme": "e.g. Computer Science or null",
+    "year": "integer 1-6 or null",
+    "semester": "integer 1-2 or null",
+    "day": "e.g. Monday or null",
+    "topic": "general topic if no specific code, e.g. exam regulations"
+  }}
 }}"""
 
-    raw = _gemini_call(prompt)
-    raw = re.sub(r"```(?:json)?", "", raw).strip()
+    intent = "hybrid"
+    entities = {"course_code": None, "programme": None, "year": None, "semester": None, "day": None, "topic": None}
+
     try:
-        entities = json.loads(raw)
+        raw = _gemini_call(prompt, model_name="models/gemini-1.5-flash")
+        raw = re.sub(r"```(?:json)?", "", raw).strip()
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            intent = data.get("intent", "hybrid")
+            entities = data.get("entities", entities)
     except Exception as e:
-        log.error(f"Structured extraction failed: {e}. Using regex fallback.")
-        entities = {"course_code": None, "programme": None, "year": None, "semester": None, "day": None, "topic": None}
+        log.error(f"Unified analysis failed: {e}. Using regex fallback.")
         m_code = re.search(r'\b([A-Z]{3,5})\s*(\d{3,4})\b', query.upper())
         if m_code:
             entities["course_code"] = f"{m_code.group(1)} {m_code.group(2)}".upper()
@@ -190,7 +176,7 @@ Return valid JSON only, with these keys (use null if not found):
         if not entities.get("programme") and profile.get("program"):
             entities["programme"] = profile["program"]
 
-    return entities
+    return intent, entities
 
 
 
@@ -634,14 +620,12 @@ class GraphRAGAssistant:
         """Generator that yields text chunks continuously as Gemini streams them."""
         student_name = user_profile.get("full_name", "Student")
         
-        # 1. Intent Classification
-        intent = classify_intent(query)
-        log.info(f"Query Intent: {intent}")
-        
-        # 2. Entity Extraction
-        # Pass both query and profile to match definition
-        entities = extract_entities(query, user_profile) 
-        log.info(f"Extracted Entities: {entities}")
+        import time
+        t0 = time.time()
+        # 1. & 2. Unified Intent Classification & Entity Extraction
+        intent, entities = analyze_query(query, user_profile)
+        t1 = time.time()
+        log.info(f"Unified NLP Pass: Intent={intent}, Entities={entities} (Routing Latency: {t1-t0:.2f}s)")
         
         # 3. Graph Retrieval
         graph_nodes = retrieve_from_graph(query, entities, user_profile, self.driver)
